@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMOLED Edge-to-Edge Forex & Salah Dashboard</title>
+  <title>AMOLED Edge-to-Edge Live Tracker</title>
   <style>
     :root {
-      --bg-main: #000000; /* True AMOLED Black to melt into your home screen */
+      --bg-main: #000000; /* Pure AMOLED Black */
       --glass-panel: rgba(255, 255, 255, 0.04);
-      --border-color: rgba(255, 255, 255, 0.08);
+      --border-color: rgba(255, 255, 255, 0.07);
       --neon-cyan: #00e5ff;
       --neon-magenta: #ff007f;
-      --neon-yellow: #e7c81a;
+      --neon-yellow: #f1c40f;
       --text-white: #ffffff;
-      --text-gray: #8e94a0;
+      --text-gray: #94a3b8;
     }
 
     * {
@@ -23,7 +23,6 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* absolute 100% viewport consumption with no scrolls */
     body, html {
       width: 100%;
       height: 100vh;
@@ -31,7 +30,7 @@
       overflow: hidden;
     }
 
-    /* Outer borders and padding set to absolute zero to maximize edge real estate */
+    /* Zero-margin edge-to-edge layout core */
     .widget-container {
       width: 100%;
       height: 100%;
@@ -39,81 +38,91 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 2px; /* Ultra-thin margin to prevent launcher clip-offs */
+      padding: 2px; 
     }
 
-    /* Minimalist High-Density Header Bar */
+    /* Clean, flat header layout with zero gray backgrounds */
     .widget-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 3px 6px;
-      background: rgba(255, 255, 255, 0.02);
+      padding: 4px 6px;
       border-bottom: 1px solid var(--border-color);
+      font-size: clamp(0.68rem, 3.2vw, 0.9rem);
+      font-weight: 700;
     }
 
     .meta-geo {
-      font-size: clamp(0.7rem, 3.2vw, 0.95rem);
-      font-weight: 800;
       color: var(--neon-cyan);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    .meta-time {
-      font-size: clamp(0.6rem, 2.8vw, 0.8rem);
-      font-weight: 600;
+    .meta-countdown {
+      color: var(--neon-yellow);
+      font-weight: 800;
+    }
+
+    .meta-sync-zone {
       color: var(--text-gray);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
     }
 
-    /* Optimized Currency Row: Compact height, ultra-legible elements */
+    #spinIcon {
+      display: inline-block;
+      color: var(--neon-cyan);
+      font-size: 1.05rem;
+      transition: transform 0.5s ease;
+    }
+
+    /* Compact Exchange Rate Strip */
     .forex-row {
       background: var(--glass-panel);
       border: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 10px;
-      margin: 2px 0;
-      height: 14%; /* Reserved height percentage */
+      padding: 4px 8px;
+      height: 12%;
     }
 
     .pair-badge {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .flag-ico {
-      width: clamp(22px, 5.5vw, 28px);
-      height: clamp(22px, 5.5vw, 28px);
+      width: clamp(20px, 5vw, 25px);
+      height: clamp(20px, 5vw, 25px);
       border-radius: 50%;
       object-fit: cover;
-      border: 1.5px solid #ffffff;
+      border: 1px solid #ffffff;
     }
 
     .pair-name {
-      font-size: clamp(0.85rem, 4vw, 1.15rem);
+      font-size: clamp(0.8rem, 3.8vw, 1.1rem);
       font-weight: 900;
       color: var(--text-white);
     }
 
-    /* Scaled down, high-precision currency rate tracking */
     .rate-text {
-      font-size: clamp(1.8rem, 8.5vw, 2.7rem);
+      font-size: clamp(1.6rem, 8vw, 2.4rem);
       font-weight: 950;
       color: var(--neon-cyan);
-      letter-spacing: -1px;
-      text-align: right;
+      letter-spacing: -0.5px;
     }
 
-    /* Salah Matrix Layout: Stretched horizontally and vertically */
+    /* Maximum Area Grid for Salah Blocks */
     .salah-matrix {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(2, 1fr);
       gap: 2px;
       flex-grow: 1;
+      margin-top: 2px;
     }
 
     .salah-block {
@@ -123,63 +132,74 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 6px 2px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 2px;
     }
 
     .block-name {
-      font-size: clamp(0.8rem, 3.8vw, 1.1rem); /* Large bold titles */
+      font-size: clamp(0.85rem, 4vw, 1.2rem);
       font-weight: 800;
       color: var(--text-gray);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .block-time {
-      font-size: clamp(1.2rem, 5.8vw, 1.85rem); /* Giant, highly legible timings */
+      font-size: clamp(1.1rem, 5.2vw, 1.7rem);
       font-weight: 900;
       color: var(--text-white);
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
-    /* NEXT SALAH HIGHLIGHT: Highly vibrant edge-to-edge status card */
+    .time-suffix {
+      font-size: 0.55em;
+      font-weight: 600;
+      opacity: 0.75;
+      margin-left: 1px;
+    }
+
+    /* Edge-to-Edge Next Prayer Highlight Matrix */
     .highlighted-active {
-      background: linear-gradient(135deg, var(--neon-magenta) 0%, #6366f1 100%) !important;
+      background: linear-gradient(135deg, var(--neon-magenta) 0%, #5b21b6 100%) !important;
       border: 1.5px solid var(--neon-magenta) !important;
-      box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.4);
     }
 
     .highlighted-active .block-name {
       color: #ffffff !important;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
 
     .highlighted-active .block-time {
-      color: var(--neon-yellow) !important; /* Extremely high contrast gold text */
-      text-shadow: 0 0 6px rgba(231, 200, 26, 0.6);
+      color: var(--neon-yellow) !important;
+      text-shadow: 0 0 6px rgba(241, 196, 15, 0.5);
+    }
+
+    .spin-active {
+      transform: rotate(360deg);
     }
   </style>
 </head>
 <body>
 
-  <div class="widget-container" onclick="manualSyncPipelines()">
-    <!-- Top Meta -->
+  <div class="widget-container">
+    <!-- Top Dashboard Header -->
     <div class="widget-header">
       <span class="meta-geo" id="geoMarker">Detecting...</span>
-      <span class="meta-time" id="syncTimestamp">Checking...</span>
+      <span class="meta-countdown" id="countdownBlock">Next: --:--</span>
+      <div class="meta-sync-zone" onclick="manualSyncPipelines()">
+        <span id="syncTimestamp">--:-- --</span>
+        <span id="spinIcon">↻</span>
+      </div>
     </div>
 
-    <!-- Reduced Rate Display -->
+    <!-- Currency Block -->
     <div class="forex-row">
       <div class="pair-badge">
-        <img src="https://flagcdn.com/w80/sa.png" class="flag-ico" alt="Saudi Arabia">
-        <img src="https://flagcdn.com/w80/in.png" class="flag-ico" alt="India">
+        <img src="https://flagcdn.com/w80/sa.png" class="flag-ico" alt="SA">
+        <img src="https://flagcdn.com/w80/in.png" class="flag-ico" alt="IN">
         <span class="pair-name">SAR/INR</span>
       </div>
       <div class="rate-text" id="rateBlock">--.----</div>
     </div>
 
-    <!-- Edge-to-Edge Grid (Large Texts) -->
+    <!-- Max Density Grid -->
     <div class="salah-matrix">
       <div class="salah-block" id="box-fajr">
         <span class="block-name">Fajr</span>
@@ -209,172 +229,218 @@
   </div>
 
   <script>
-    // Pulls from Real-Time aggregate FX pools directly matching XE/Google mid-market variations
-    const REAL_TIME_FOREX_URL = 'https://api.exchangerate-api.com/v4/latest/SAR';
-    const SALAH_API_BASE = 'https://api.aladhan.com/v1/timings';
+    // --- CALIBRATION CONFIGURATION ---
+    // Change this value if you notice any minor variance from your preferred retail tracking app.
+    const RATE_OFFSET = 0.0600; 
 
-    const BASE_LAT_FALLBACK = 24.7136;
-    const BASE_LNG_FALLBACK = 46.6753;
-    const BASE_CITY_FALLBACK = "Riyadh";
+    const FOREX_ENDPOINT = 'https://open.er-api.com/v6/latest/SAR';
+    const SALAH_ENDPOINT_BASE = 'https://api.aladhan.com/v1/timings';
 
-    let cachedTimingsObj = null;
+    const DEFAULT_LAT = 24.7136;
+    const DEFAULT_LNG = 46.6753;
+    const DEFAULT_CITY = "Riyadh";
 
-    function applyLocalStorageCache() {
-      if (localStorage.getItem('dense_rate')) document.getElementById('rateBlock').textContent = localStorage.getItem('dense_rate');
-      if (localStorage.getItem('dense_geo')) document.getElementById('geoMarker').textContent = localStorage.getItem('dense_geo');
+    let cachedTimings = null;
+    let targetNextPrayerTime = null;
+    let targetNextPrayerName = "";
+
+    function convertTo12HourFormat(time24) {
+      if (!time24) return '--:--';
+      let [hours, minutes] = time24.split(':').map(Number);
+      const suffix = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      return `${hours}:${minutes < 10 ? '0' + minutes : minutes}<span class="time-suffix">${suffix}</span>`;
+    }
+
+    function initFromLocalStorage() {
+      if (localStorage.getItem('fin_rate')) document.getElementById('rateBlock').textContent = localStorage.getItem('fin_rate');
+      if (localStorage.getItem('fin_geo')) document.getElementById('geoMarker').textContent = localStorage.getItem('fin_geo');
       
-      const targets = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      let cacheObject = {};
-      targets.forEach(item => {
-        const value = localStorage.getItem(`dense_val_${item}`);
-        if(value) {
-          document.getElementById(`v-${item}`).textContent = value;
-          const mapKey = item.charAt(0).toUpperCase() + item.slice(1);
-          cacheObject[mapKey] = value;
+      const prayers = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      let reconstructionObj = {};
+      prayers.forEach(p => {
+        const value = localStorage.getItem(`fin_time_${p}`);
+        if (value) {
+          document.getElementById(`v-${p}`).innerHTML = convertTo12HourFormat(value);
+          const apiKey = p.charAt(0).toUpperCase() + p.slice(1);
+          reconstructionObj[apiKey] = value;
         }
       });
-      if (Object.keys(cacheObject).length === 6) {
-        cachedTimingsObj = cacheObject;
-        markNextSalahHighlight();
+      
+      if (Object.keys(reconstructionObj).length === 6) {
+        cachedTimings = reconstructionObj;
+        evaluateNextPrayerAndHighlight();
       }
-      if (localStorage.getItem('dense_sync')) document.getElementById('syncTimestamp').textContent = localStorage.getItem('dense_sync');
+      if (localStorage.getItem('fin_sync')) document.getElementById('syncTimestamp').textContent = localStorage.getItem('fin_sync');
     }
 
     async function manualSyncPipelines() {
-      await fetchPrecisionForex();
-      await acquirePositionCoordinates();
+      const icon = document.getElementById('spinIcon');
+      icon.style.transform = 'rotate(360deg)';
+      setTimeout(() => { icon.style.transform = 'rotate(0deg)'; }, 500);
+
+      await fetchForexData();
+      await fetchGeographicCoordinates();
     }
 
-    async function fetchPrecisionForex() {
+    async function fetchForexData() {
       try {
-        const response = await fetch(REAL_TIME_FOREX_URL);
+        const response = await fetch(FOREX_ENDPOINT);
         if (!response.ok) throw new Error();
         const data = await response.json();
-        const liveRate = data.rates.INR;
-        if (liveRate) {
-          const precisionString = liveRate.toFixed(4);
-          document.getElementById('rateBlock').textContent = precisionString;
-          localStorage.setItem('dense_rate', precisionString);
+        const baseRate = data.rates.INR;
+        if (baseRate) {
+          // Applies your real-time manual spread offset
+          const correctedRate = (baseRate + RATE_OFFSET).toFixed(4);
+          document.getElementById('rateBlock').textContent = correctedRate;
+          localStorage.setItem('fin_rate', correctedRate);
         }
-      } catch (err) { console.error('Real-time sync failure', err); }
+      } catch (e) { console.error("Forex Sync Error", e); }
     }
 
-    async function acquirePositionCoordinates() {
+    async function fetchGeographicCoordinates() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => { requestSalahTimings(pos.coords.latitude, pos.coords.longitude, "Auto GPS"); },
-          () => { ipFallbackLookup(); },
-          { timeout: 5000 }
+          (pos) => { downloadSalahTimings(pos.coords.latitude, pos.coords.longitude, "Auto GPS"); },
+          () => { fallbackIPLocation(); },
+          { timeout: 4000 }
         );
       } else {
-        ipFallbackLookup();
+        fallbackIPLocation();
       }
     }
 
-    async function ipFallbackLookup() {
+    async function fallbackIPLocation() {
       try {
-        const response = await fetch('https://ipapi.co/json/');
-        if (!response.ok) throw new Error();
-        const locationData = await response.json();
-        if (locationData.latitude && locationData.longitude) {
-          requestSalahTimings(locationData.latitude, locationData.longitude, locationData.city || "Auto IP");
+        const res = await fetch('https://ipapi.co/json/');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (data.latitude && data.longitude) {
+          downloadSalahTimings(data.latitude, data.longitude, data.city || "Auto IP");
         } else { throw new Error(); }
-      } catch (err) {
-        requestSalahTimings(BASE_LAT_FALLBACK, BASE_LNG_FALLBACK, BASE_CITY_FALLBACK);
+      } catch (e) {
+        downloadSalahTimings(DEFAULT_LAT, DEFAULT_LNG, DEFAULT_CITY);
       }
     }
 
-    async function requestSalahTimings(lat, lng, label) {
+    async function downloadSalahTimings(lat, lng, label) {
       try {
-        const currentISO = new Date().toISOString().split('T')[0];
-        // Utilizing Method 4 (Umm Al-Qura) optimized for strict regional timing accuracy
-        const response = await fetch(`${SALAH_API_BASE}/${currentISO}?latitude=${lat}&longitude=${lng}&method=4`);
+        const dynamicISO = new Date().toISOString().split('T')[0];
+        // Umm Al-Qura Method (4) explicitly locked
+        const response = await fetch(`${SALAH_ENDPOINT_BASE}/${dynamicISO}?latitude=${lat}&longitude=${lng}&method=4`);
         if (!response.ok) throw new Error();
         
-        const resultPayload = await response.json();
-        const systemTimings = resultPayload.data.timings;
+        const payload = await response.json();
+        const timings = payload.data.timings;
         
         document.getElementById('geoMarker').textContent = label;
-        localStorage.setItem('dense_geo', label);
+        localStorage.setItem('fin_geo', label);
 
-        const localMap = {
-          'fajr': systemTimings.Fajr,
-          'sunrise': systemTimings.Sunrise,
-          'dhuhr': systemTimings.Dhuhr,
-          'asr': systemTimings.Asr,
-          'maghrib': systemTimings.Maghrib,
-          'isha': systemTimings.Isha
+        cachedTimings = timings;
+
+        const mapping = {
+          'fajr': timings.Fajr,
+          'sunrise': timings.Sunrise,
+          'dhuhr': timings.Dhuhr,
+          'asr': timings.Asr,
+          'maghrib': timings.Maghrib,
+          'isha': timings.Isha
         };
 
-        cachedTimingsObj = systemTimings;
-
-        for (const [key, value] of Object.entries(localMap)) {
+        for (const [key, value] of Object.entries(mapping)) {
           if (value) {
-            document.getElementById(`v-${key}`).textContent = value;
-            localStorage.setItem(`dense_val_${key}`, value);
+            document.getElementById(`v-${key}`).innerHTML = convertTo12HourFormat(value);
+            localStorage.setItem(`fin_time_${key}`, value);
           }
         }
 
-        markNextSalahHighlight();
+        evaluateNextPrayerAndHighlight();
 
-        const formattedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('syncTimestamp').textContent = formattedTime;
-        localStorage.setItem('dense_sync', formattedTime);
+        const cleanNow = new Date();
+        const formattedStamp = cleanNow.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        document.getElementById('syncTimestamp').textContent = formattedStamp;
+        localStorage.setItem('fin_sync', formattedStamp);
 
-      } catch (err) { console.error('Salah sync failure', err); }
+      } catch (e) { console.error("Salah Sync Error", e); }
     }
 
-    function markNextSalahHighlight() {
-      if (!cachedTimingsObj) return;
+    function evaluateNextPrayerAndHighlight() {
+      if (!cachedTimings) return;
 
-      const currentTime = new Date();
-      const prayerPriorityList = [
-        { id: 'fajr', time: cachedTimingsObj.Fajr },
-        { id: 'dhuhr', time: cachedTimingsObj.Dhuhr },
-        { id: 'asr', time: cachedTimingsObj.Asr },
-        { id: 'maghrib', time: cachedTimingsObj.Maghrib },
-        { id: 'isha', time: cachedTimingsObj.Isha }
+      const now = new Date();
+      const timeline = [
+        { id: 'fajr', time: cachedTimings.Fajr },
+        { id: 'dhuhr', time: cachedTimings.Dhuhr },
+        { id: 'asr', time: cachedTimings.Asr },
+        { id: 'maghrib', time: cachedTimings.Maghrib },
+        { id: 'isha', time: cachedTimings.Isha }
       ];
 
-      // Remove previous highlighted selections
-      const selectors = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      selectors.forEach(item => {
-        const node = document.getElementById(`box-${item}`);
-        if(node) node.classList.remove('highlighted-active');
+      const elements = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      elements.forEach(id => {
+        const el = document.getElementById(`box-${id}`);
+        if (el) el.classList.remove('highlighted-active');
       });
 
-      let targetActiveId = null;
+      let nextFound = null;
 
-      for (let item of prayerPriorityList) {
+      for (let item of timeline) {
         if (!item.time) continue;
-        const [hours, minutes] = item.time.split(':').map(Number);
-        const prayerDateInstance = new Date(currentTime);
-        prayerDateInstance.setHours(hours, minutes, 0, 0);
+        const [h, m] = item.time.split(':').map(Number);
+        const pDate = new Date(now);
+        pDate.setHours(h, m, 0, 0);
 
-        if (prayerDateInstance > currentTime) {
-          targetActiveId = item.id;
+        if (pDate > now) {
+          nextFound = item;
+          targetNextPrayerTime = pDate;
           break;
         }
       }
 
-      // Default back to tomorrow's Fajr if all daily slots have closed
-      if (!targetActiveId) {
-        targetActiveId = 'fajr';
+      // If all prayers passed today, handle rollover to tomorrow's Fajr
+      if (!nextFound) {
+        nextFound = timeline[0];
+        const [h, m] = nextFound.time.split(':').map(Number);
+        const tomorrow = new Date(now);
+        tomorrow.setDate(now.getDate() + 1);
+        tomorrow.setHours(h, m, 0, 0);
+        targetNextPrayerTime = tomorrow;
       }
 
-      const activeNode = document.getElementById(`box-${targetActiveId}`);
-      if (activeNode) {
-        activeNode.classList.add('highlighted-active');
-      }
+      targetNextPrayerName = nextFound.id.toUpperCase();
+      const activeBox = document.getElementById(`box-${nextFound.id}`);
+      if (activeBox) activeBox.classList.add('highlighted-active');
+
+      updateCountdownClock();
     }
 
-    // Startup Init Execution
-    applyLocalStorageCache();
+    function updateCountdownClock() {
+      if (!targetNextPrayerTime) return;
+
+      const rightNow = new Date();
+      const millisecondDiff = targetNextPrayerTime - rightNow;
+
+      if (millisecondDiff <= 0) {
+        // Countdown completed, automatically shift to next sequence block
+        evaluateNextPrayerAndHighlight();
+        return;
+      }
+
+      const totalSeconds = Math.floor(millisecondDiff / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+      document.getElementById('countdownBlock').textContent = 
+        `${targetNextPrayerName}: -${hours}h ${minutes}m`;
+    }
+
+    // Initialize Widget Context Loop
+    initFromLocalStorage();
     manualSyncPipelines();
 
-    // Loop Interval triggers
-    setInterval(manualSyncPipelines, 15 * 60 * 1000); // Main pipeline sync (15 min)
-    setInterval(markNextSalahHighlight, 60 * 1000); // Highlight validation sync (1 min)
+    // Background Structural Timers
+    setInterval(manualSyncPipelines, 15 * 60 * 1000); // 15 Minute Data Fetch Refresh
+    setInterval(updateCountdownClock, 1000);          // 1 Second Precise Live Ticker loop
   </script>
 </body>
 </html>
