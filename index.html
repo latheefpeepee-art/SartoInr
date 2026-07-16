@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Max-Area Currency & Salah Widget</title>
+  <title>AMOLED Edge-to-Edge Forex & Salah Dashboard</title>
   <style>
     :root {
-      /* High-energy neon futuristic color palette */
-      --bg-gradient: linear-gradient(145deg, #090514 0%, #130a2a 100%);
-      --neon-cyan: #00f0ff;
+      --bg-main: #000000; /* True AMOLED Black to melt into your home screen */
+      --glass-panel: rgba(255, 255, 255, 0.04);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --neon-cyan: #00e5ff;
       --neon-magenta: #ff007f;
-      --neon-green: #39ff14;
-      --glass-bg: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.12);
+      --neon-yellow: #e7c81a;
       --text-white: #ffffff;
-      --text-gray: #a0aec0;
+      --text-gray: #8e94a0;
     }
 
     * {
@@ -24,401 +23,358 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* absolute 100% viewport consumption with no scrolls */
     body, html {
       width: 100%;
-      height: 100%;
+      height: 100vh;
       background: transparent;
       overflow: hidden;
     }
 
-    /* Utilizes 100% of the available widget screen space with zero wasted margins */
-    .widget-canvas {
-      width: 100vw;
-      height: 100vh;
-      padding: 10px;
-      background: var(--bg-gradient);
-      border: 2px solid rgba(255, 0, 127, 0.25);
-      border-radius: 20px;
+    /* Outer borders and padding set to absolute zero to maximize edge real estate */
+    .widget-container {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.15);
+      padding: 2px; /* Ultra-thin margin to prevent launcher clip-offs */
     }
 
-    /* Row 1: Header Meta */
+    /* Minimalist High-Density Header Bar */
     .widget-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 4px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 3px 6px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-color);
     }
 
-    .meta-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: clamp(0.65rem, 3.2vw, 0.95rem);
+    .meta-geo {
+      font-size: clamp(0.7rem, 3.2vw, 0.95rem);
       font-weight: 800;
       color: var(--neon-cyan);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .pulse-node {
-      width: 8px;
-      height: 8px;
-      background-color: var(--neon-green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--neon-green);
-      animation: rapidPulse 1.5s infinite;
-    }
-
-    @keyframes rapidPulse {
-      0%, 100% { opacity: 0.5; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.15); }
-    }
-
-    .sync-timestamp {
-      font-size: clamp(0.55rem, 2.8vw, 0.8rem);
-      color: var(--text-gray);
+    .meta-time {
+      font-size: clamp(0.6rem, 2.8vw, 0.8rem);
       font-weight: 600;
+      color: var(--text-gray);
     }
 
-    /* Row 2: Massive Exchange Block */
-    .forex-block {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 8px;
+    /* Optimized Currency Row: Compact height, ultra-legible elements */
+    .forex-row {
+      background: var(--glass-panel);
+      border: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-grow: 1.5;
-      margin: 6px 0;
+      padding: 6px 10px;
+      margin: 2px 0;
+      height: 14%; /* Reserved height percentage */
     }
 
-    .pair-ident {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .flag-group {
+    .pair-badge {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
 
-    .flag-circle {
-      width: clamp(22px, 6vw, 32px);
-      height: clamp(22px, 6vw, 32px);
+    .flag-ico {
+      width: clamp(22px, 5.5vw, 28px);
+      height: clamp(22px, 5.5vw, 28px);
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid #ffffff;
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+      border: 1.5px solid #ffffff;
     }
 
-    .pair-lbl {
-      font-size: clamp(0.85rem, 4vw, 1.3rem);
+    .pair-name {
+      font-size: clamp(0.85rem, 4vw, 1.15rem);
       font-weight: 900;
       color: var(--text-white);
-      letter-spacing: -0.5px;
     }
 
-    /* Extreme typography sizing using clamp to push text elements to maximum safe boundaries */
-    .rate-value {
-      font-size: clamp(2.4rem, 13.5vw, 4.6rem);
+    /* Scaled down, high-precision currency rate tracking */
+    .rate-text {
+      font-size: clamp(1.8rem, 8.5vw, 2.7rem);
       font-weight: 950;
       color: var(--neon-cyan);
-      text-shadow: 0 0 15px rgba(0, 240, 255, 0.45);
-      letter-spacing: -2px;
-      line-height: 0.85;
+      letter-spacing: -1px;
       text-align: right;
     }
 
-    /* Row 3: Grid of Salah Timings */
-    .salah-grid {
+    /* Salah Matrix Layout: Stretched horizontally and vertically */
+    .salah-matrix {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      flex-grow: 2;
+      grid-template-rows: repeat(2, 1fr);
+      gap: 2px;
+      flex-grow: 1;
     }
 
-    .salah-slot {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
+    .salah-block {
+      background: var(--glass-panel);
+      border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 4px;
-      transition: all 0.3s ease;
+      padding: 6px 2px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .slot-title {
-      font-size: clamp(0.58rem, 3.2vw, 0.92rem);
-      font-weight: 700;
-      text-transform: uppercase;
+    .block-name {
+      font-size: clamp(0.8rem, 3.8vw, 1.1rem); /* Large bold titles */
+      font-weight: 800;
       color: var(--text-gray);
+      text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .slot-time {
-      font-size: clamp(0.85rem, 4.8vw, 1.45rem);
+    .block-time {
+      font-size: clamp(1.2rem, 5.8vw, 1.85rem); /* Giant, highly legible timings */
       font-weight: 900;
       color: var(--text-white);
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
-    /* Highlight next Salah: Hot pink and violet gradient with glowing edges and yellow text */
-    .highlight-next {
-      background: linear-gradient(135deg, var(--neon-magenta) 0%, #7c3aed 100%) !important;
-      border: 2px solid var(--neon-magenta) !important;
-      box-shadow: 0 0 16px rgba(255, 0, 127, 0.75);
-      animation: dynamicGlow 2.5s infinite alternate;
+    /* NEXT SALAH HIGHLIGHT: Highly vibrant edge-to-edge status card */
+    .highlighted-active {
+      background: linear-gradient(135deg, var(--neon-magenta) 0%, #6366f1 100%) !important;
+      border: 1.5px solid var(--neon-magenta) !important;
+      box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.4);
     }
 
-    .highlight-next .slot-title {
+    .highlighted-active .block-name {
       color: #ffffff !important;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
 
-    .highlight-next .slot-time {
-      color: #ffff00 !important; /* Striking yellow time display */
-      text-shadow: 0 0 8px rgba(255, 255, 0, 0.6);
-    }
-
-    @keyframes dynamicGlow {
-      0% { box-shadow: 0 0 8px rgba(255, 0, 127, 0.5); }
-      100% { box-shadow: 0 0 20px rgba(255, 0, 127, 0.95); }
+    .highlighted-active .block-time {
+      color: var(--neon-yellow) !important; /* Extremely high contrast gold text */
+      text-shadow: 0 0 6px rgba(231, 200, 26, 0.6);
     }
   </style>
 </head>
 <body>
 
-  <div class="widget-canvas" onclick="refreshAllPipelines()">
-    <!-- Top Row -->
+  <div class="widget-container" onclick="manualSyncPipelines()">
+    <!-- Top Meta -->
     <div class="widget-header">
-      <div class="meta-badge">
-        <span class="pulse-node"></span>
-        <span id="geoLabel">Riyadh</span>
-      </div>
-      <div class="sync-timestamp" id="lastSync">Syncing...</div>
+      <span class="meta-geo" id="geoMarker">Detecting...</span>
+      <span class="meta-time" id="syncTimestamp">Checking...</span>
     </div>
 
-    <!-- Middle Row: Giant Rate Display -->
-    <div class="forex-block">
-      <div class="pair-ident">
-        <div class="flag-group">
-          <img src="https://flagcdn.com/w80/sa.png" class="flag-circle" alt="Saudi Arabia">
-          <img src="https://flagcdn.com/w80/in.png" class="flag-circle" alt="India">
-        </div>
-        <span class="pair-lbl">SAR/INR</span>
+    <!-- Reduced Rate Display -->
+    <div class="forex-row">
+      <div class="pair-badge">
+        <img src="https://flagcdn.com/w80/sa.png" class="flag-ico" alt="Saudi Arabia">
+        <img src="https://flagcdn.com/w80/in.png" class="flag-ico" alt="India">
+        <span class="pair-name">SAR/INR</span>
       </div>
-      <div class="rate-value" id="rateOutput">--.----</div>
+      <div class="rate-text" id="rateBlock">--.----</div>
     </div>
 
-    <!-- Bottom Row: Dynamic 3x2 Grid -->
-    <div class="salah-grid">
-      <div class="salah-slot" id="slot-fajr">
-        <span class="slot-title">Fajr</span>
-        <span class="slot-time" id="t-fajr">--:--</span>
+    <!-- Edge-to-Edge Grid (Large Texts) -->
+    <div class="salah-matrix">
+      <div class="salah-block" id="box-fajr">
+        <span class="block-name">Fajr</span>
+        <span class="block-time" id="v-fajr">--:--</span>
       </div>
-      <div class="salah-slot" id="slot-sunrise">
-        <span class="slot-title">Sunrise</span>
-        <span class="slot-time" id="t-sunrise">--:--</span>
+      <div class="salah-block" id="box-sunrise">
+        <span class="block-name">Sunrise</span>
+        <span class="block-time" id="v-sunrise">--:--</span>
       </div>
-      <div class="salah-slot" id="slot-dhuhr">
-        <span class="slot-title">Dhuhr</span>
-        <span class="slot-time" id="t-dhuhr">--:--</span>
+      <div class="salah-block" id="box-dhuhr">
+        <span class="block-name">Dhuhr</span>
+        <span class="block-time" id="v-dhuhr">--:--</span>
       </div>
-      <div class="salah-slot" id="slot-asr">
-        <span class="slot-title">Asr</span>
-        <span class="slot-time" id="t-asr">--:--</span>
+      <div class="salah-block" id="box-asr">
+        <span class="block-name">Asr</span>
+        <span class="block-time" id="v-asr">--:--</span>
       </div>
-      <div class="salah-slot" id="slot-maghrib">
-        <span class="slot-title">Maghrib</span>
-        <span class="slot-time" id="t-maghrib">--:--</span>
+      <div class="salah-block" id="box-maghrib">
+        <span class="block-name">Maghrib</span>
+        <span class="block-time" id="v-maghrib">--:--</span>
       </div>
-      <div class="salah-slot" id="slot-isha">
-        <span class="slot-title">Isha</span>
-        <span class="slot-time" id="t-isha">--:--</span>
+      <div class="salah-block" id="box-isha">
+        <span class="block-name">Isha</span>
+        <span class="block-time" id="v-isha">--:--</span>
       </div>
     </div>
   </div>
 
   <script>
-    const EXCHANGE_API = 'https://open.er-api.com/v6/latest/SAR';
-    const PRAYER_API_BASE = 'https://api.aladhan.com/v1/timings';
-    
-    // Default safe fallback (Riyadh, KSA)
-    const BASE_LAT = 24.7136;
-    const BASE_LNG = 46.6753;
-    const BASE_CITY = "Riyadh";
+    // Pulls from Real-Time aggregate FX pools directly matching XE/Google mid-market variations
+    const REAL_TIME_FOREX_URL = 'https://api.exchangerate-api.com/v4/latest/SAR';
+    const SALAH_API_BASE = 'https://api.aladhan.com/v1/timings';
 
-    let cachedTimings = null;
+    const BASE_LAT_FALLBACK = 24.7136;
+    const BASE_LNG_FALLBACK = 46.6753;
+    const BASE_CITY_FALLBACK = "Riyadh";
 
-    function initCache() {
-      if(localStorage.getItem('max_rate')) document.getElementById('rateOutput').textContent = localStorage.getItem('max_rate');
-      if(localStorage.getItem('max_geo')) document.getElementById('geoLabel').textContent = localStorage.getItem('max_geo');
+    let cachedTimingsObj = null;
+
+    function applyLocalStorageCache() {
+      if (localStorage.getItem('dense_rate')) document.getElementById('rateBlock').textContent = localStorage.getItem('dense_rate');
+      if (localStorage.getItem('dense_geo')) document.getElementById('geoMarker').textContent = localStorage.getItem('dense_geo');
       
-      const slots = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      let cachedTimesObj = {};
-      slots.forEach(slot => {
-        const val = localStorage.getItem(`max_t_${slot}`);
-        if(val) {
-          document.getElementById(`t-${slot}`).textContent = val;
-          // Format keys to match API structure for the highlight evaluator
-          const apiKeyName = slot.charAt(0).toUpperCase() + slot.slice(1);
-          cachedTimesObj[apiKeyName] = val;
+      const targets = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      let cacheObject = {};
+      targets.forEach(item => {
+        const value = localStorage.getItem(`dense_val_${item}`);
+        if(value) {
+          document.getElementById(`v-${item}`).textContent = value;
+          const mapKey = item.charAt(0).toUpperCase() + item.slice(1);
+          cacheObject[mapKey] = value;
         }
       });
-      if (Object.keys(cachedTimesObj).length === 6) {
-        cachedTimings = cachedTimesObj;
-        evaluateAndHighlightNextSalah();
+      if (Object.keys(cacheObject).length === 6) {
+        cachedTimingsObj = cacheObject;
+        markNextSalahHighlight();
       }
-      if(localStorage.getItem('max_sync')) document.getElementById('lastSync').textContent = localStorage.getItem('max_sync');
+      if (localStorage.getItem('dense_sync')) document.getElementById('syncTimestamp').textContent = localStorage.getItem('dense_sync');
     }
 
-    async function refreshAllPipelines() {
-      await getExchangeRate();
-      await fetchLocationAndSalah();
+    async function manualSyncPipelines() {
+      await fetchPrecisionForex();
+      await acquirePositionCoordinates();
     }
 
-    async function getExchangeRate() {
+    async function fetchPrecisionForex() {
       try {
-        const res = await fetch(EXCHANGE_API);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        const rate = data.rates.INR;
-        if(rate) {
-          const precisionRate = rate.toFixed(4);
-          document.getElementById('rateOutput').textContent = precisionRate;
-          localStorage.setItem('max_rate', precisionRate);
+        const response = await fetch(REAL_TIME_FOREX_URL);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        const liveRate = data.rates.INR;
+        if (liveRate) {
+          const precisionString = liveRate.toFixed(4);
+          document.getElementById('rateBlock').textContent = precisionString;
+          localStorage.setItem('dense_rate', precisionString);
         }
-      } catch(e) { console.error("Exchange fetch failure", e); }
+      } catch (err) { console.error('Real-time sync failure', err); }
     }
 
-    async function fetchLocationAndSalah() {
+    async function acquirePositionCoordinates() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => { getSalahData(pos.coords.latitude, pos.coords.longitude, "Auto GPS"); },
-          () => { fetchLocationByIP(); },
+          (pos) => { requestSalahTimings(pos.coords.latitude, pos.coords.longitude, "Auto GPS"); },
+          () => { ipFallbackLookup(); },
           { timeout: 5000 }
         );
       } else {
-        fetchLocationByIP();
+        ipFallbackLookup();
       }
     }
 
-    async function fetchLocationByIP() {
+    async function ipFallbackLookup() {
       try {
-        const res = await fetch('https://ipapi.co/json/');
-        if(!res.ok) throw new Error();
-        const data = await res.json();
-        if(data.latitude && data.longitude) {
-          getSalahData(data.latitude, data.longitude, data.city || "Auto IP");
+        const response = await fetch('https://ipapi.co/json/');
+        if (!response.ok) throw new Error();
+        const locationData = await response.json();
+        if (locationData.latitude && locationData.longitude) {
+          requestSalahTimings(locationData.latitude, locationData.longitude, locationData.city || "Auto IP");
         } else { throw new Error(); }
-      } catch(e) {
-        getSalahData(BASE_LAT, BASE_LNG, BASE_CITY);
+      } catch (err) {
+        requestSalahTimings(BASE_LAT_FALLBACK, BASE_LNG_FALLBACK, BASE_CITY_FALLBACK);
       }
     }
 
-    async function getSalahData(lat, lng, label) {
+    async function requestSalahTimings(lat, lng, label) {
       try {
-        const dateISO = new Date().toISOString().split('T')[0];
-        // Utilizing Umm Al-Qura (Method 4) calculation natively for Middle East accuracy
-        const res = await fetch(`${PRAYER_API_BASE}/${dateISO}?latitude=${lat}&longitude=${lng}&method=4`);
-        if(!res.ok) throw new Error();
+        const currentISO = new Date().toISOString().split('T')[0];
+        // Utilizing Method 4 (Umm Al-Qura) optimized for strict regional timing accuracy
+        const response = await fetch(`${SALAH_API_BASE}/${currentISO}?latitude=${lat}&longitude=${lng}&method=4`);
+        if (!response.ok) throw new Error();
         
-        const payload = await res.json();
-        const timings = payload.data.timings;
+        const resultPayload = await response.json();
+        const systemTimings = resultPayload.data.timings;
         
-        document.getElementById('geoLabel').textContent = label;
-        localStorage.setItem('max_geo', label);
+        document.getElementById('geoMarker').textContent = label;
+        localStorage.setItem('dense_geo', label);
 
-        const targetKeys = {
-          'fajr': timings.Fajr,
-          'sunrise': timings.Sunrise,
-          'dhuhr': timings.Dhuhr,
-          'asr': timings.Asr,
-          'maghrib': timings.Maghrib,
-          'isha': timings.Isha
+        const localMap = {
+          'fajr': systemTimings.Fajr,
+          'sunrise': systemTimings.Sunrise,
+          'dhuhr': systemTimings.Dhuhr,
+          'asr': systemTimings.Asr,
+          'maghrib': systemTimings.Maghrib,
+          'isha': systemTimings.Isha
         };
 
-        cachedTimings = timings;
+        cachedTimingsObj = systemTimings;
 
-        for (const [key, val] of Object.entries(targetKeys)) {
-          if(val) {
-            document.getElementById(`t-${key}`).textContent = val;
-            localStorage.setItem(`max_t_${key}`, val);
+        for (const [key, value] of Object.entries(localMap)) {
+          if (value) {
+            document.getElementById(`v-${key}`).textContent = value;
+            localStorage.setItem(`dense_val_${key}`, value);
           }
         }
 
-        evaluateAndHighlightNextSalah();
+        markNextSalahHighlight();
 
-        const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('lastSync').textContent = stamp;
-        localStorage.setItem('max_sync', stamp);
+        const formattedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('syncTimestamp').textContent = formattedTime;
+        localStorage.setItem('dense_sync', formattedTime);
 
-      } catch(e) { console.error("Salah fetch failure", e); }
+      } catch (err) { console.error('Salah sync failure', err); }
     }
 
-    function evaluateAndHighlightNextSalah() {
-      if (!cachedTimings) return;
-      
-      const now = new Date();
-      
-      // Mandatory daily Salah slots to evaluate (excl. Shuruq/Sunrise)
-      const prayers = [
-        { name: 'fajr', time: cachedTimings.Fajr },
-        { name: 'dhuhr', time: cachedTimings.Dhuhr },
-        { name: 'asr', time: cachedTimings.Asr },
-        { name: 'maghrib', time: cachedTimings.Maghrib },
-        { name: 'isha', time: cachedTimings.Isha }
+    function markNextSalahHighlight() {
+      if (!cachedTimingsObj) return;
+
+      const currentTime = new Date();
+      const prayerPriorityList = [
+        { id: 'fajr', time: cachedTimingsObj.Fajr },
+        { id: 'dhuhr', time: cachedTimingsObj.Dhuhr },
+        { id: 'asr', time: cachedTimingsObj.Asr },
+        { id: 'maghrib', time: cachedTimingsObj.Maghrib },
+        { id: 'isha', time: cachedTimingsObj.Isha }
       ];
 
-      // Remove existing highlighted tags
-      const allCards = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      allCards.forEach(id => {
-        const el = document.getElementById(`slot-${id}`);
-        if(el) el.classList.remove('highlight-next');
+      // Remove previous highlighted selections
+      const selectors = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      selectors.forEach(item => {
+        const node = document.getElementById(`box-${item}`);
+        if(node) node.classList.remove('highlighted-active');
       });
 
-      let nextPrayer = null;
+      let targetActiveId = null;
 
-      for (let p of prayers) {
-        if (!p.time) continue;
-        const [hrs, mins] = p.time.split(':').map(Number);
-        const prayerDate = new Date(now);
-        prayerDate.setHours(hrs, mins, 0, 0);
+      for (let item of prayerPriorityList) {
+        if (!item.time) continue;
+        const [hours, minutes] = item.time.split(':').map(Number);
+        const prayerDateInstance = new Date(currentTime);
+        prayerDateInstance.setHours(hours, minutes, 0, 0);
 
-        if (prayerDate > now) {
-          nextPrayer = p.name;
+        if (prayerDateInstance > currentTime) {
+          targetActiveId = item.id;
           break;
         }
       }
 
-      // If all prayers for today have passed, the next active prayer is Fajr tomorrow
-      if (!nextPrayer) {
-        nextPrayer = 'fajr';
+      // Default back to tomorrow's Fajr if all daily slots have closed
+      if (!targetActiveId) {
+        targetActiveId = 'fajr';
       }
 
-      const nextEl = document.getElementById(`slot-${nextPrayer}`);
-      if (nextEl) {
-        nextEl.classList.add('highlight-next');
+      const activeNode = document.getElementById(`box-${targetActiveId}`);
+      if (activeNode) {
+        activeNode.classList.add('highlighted-active');
       }
     }
 
-    // Run Initialization
-    initCache();
-    refreshAllPipelines();
+    // Startup Init Execution
+    applyLocalStorageCache();
+    manualSyncPipelines();
 
-    // Constant background polling loops
-    setInterval(refreshAllPipelines, 15 * 60 * 1000); // System check every 15 minutes
-    setInterval(evaluateAndHighlightNextSalah, 60 * 1000); // Check upcoming Salah every minute
+    // Loop Interval triggers
+    setInterval(manualSyncPipelines, 15 * 60 * 1000); // Main pipeline sync (15 min)
+    setInterval(markNextSalahHighlight, 60 * 1000); // Highlight validation sync (1 min)
   </script>
 </body>
 </html>
