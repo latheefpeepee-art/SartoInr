@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vibrant SAR to INR Widget</title>
+  <title>Professional Currency & Salah Widget</title>
   <style>
     :root {
-      /* Ultra-colorful, modern linear gradient */
-      --widget-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 35%, #db2777 70%, #ea580c 100%);
-      --card-bg: rgba(255, 255, 255, 0.12);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --text-primary: #ffffff;
-      --text-secondary: rgba(255, 255, 255, 0.75);
-      --pulse-glow: #22c55e;
+      --bg-main: #0d0e11; /* Ultra-dark luxury slate */
+      --panel-bg: rgba(255, 255, 255, 0.03);
+      --border-color: rgba(255, 255, 255, 0.07);
+      --text-main: #f3f4f6;
+      --text-muted: #8a8f98;
+      --accent-gold: #d4af37; /* Premium muted gold accent */
+      --accent-blue: #3b82f6; /* System indicator blue */
     }
 
     * {
@@ -28,247 +28,342 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: transparent; /* Maintains background overlay support in widgets */
+      background: transparent;
       overflow: hidden;
     }
 
-    /* Vibrant container designed to dynamically adapt to home screen scaling */
-    .widget-container {
+    /* Executive Dashboard Grid Container */
+    .dashboard-container {
       width: 100%;
       height: 100%;
-      padding: 18px;
-      background: var(--widget-gradient);
-      border: 1px solid var(--glass-border);
-      border-radius: 28px;
+      padding: 16px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
-      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
     }
 
-    .widget-header {
+    /* Meta Header Row */
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .location-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--panel-bg);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .location-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+    }
+
+    .refresh-trigger {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      transition: color 0.2s;
+    }
+    
+    .refresh-trigger:active {
+      color: var(--text-main);
+    }
+
+    /* Data Core Blocks */
+    .dash-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-grow: 1;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    /* Section A: Exchange Panel */
+    .exchange-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .currency-pairing {
+    .pairing-wrapper {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: var(--card-bg);
-      padding: 6px 12px;
-      border-radius: 50px;
-      border: 1px solid var(--glass-border);
+      gap: 6px;
     }
 
-    /* Small circular flag styles */
-    .flag-circle {
-      width: 20px;
-      height: 20px;
+    .flag-node {
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1.5px solid #ffffff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .currency-label {
-      font-size: 0.8rem;
+    .pair-lbl {
+      font-size: 0.75rem;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--text-muted);
       letter-spacing: 0.5px;
     }
 
-    .arrow-split {
-      color: var(--text-secondary);
-      font-size: 0.75rem;
-      font-weight: bold;
+    .rate-string {
+      font-size: clamp(1.6rem, 7vw, 2.3rem);
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
     }
 
-    .live-indicator {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      background-color: var(--pulse-glow);
-      border-radius: 50%;
-      box-shadow: 0 0 10px var(--pulse-glow);
-      animation: heartBeat 2s infinite;
-    }
-
-    @keyframes heartBeat {
-      0%, 100% { transform: scale(0.9); opacity: 0.7; }
-      50% { transform: scale(1.2); opacity: 1; }
-    }
-
-    .refresh-action {
-      background: var(--card-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-primary);
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      font-size: 1.1rem;
-      transition: transform 0.1s, background 0.2s;
-    }
-
-    .refresh-action:active {
-      transform: scale(0.85);
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    .widget-body {
+    /* Section B: Salah Panel Grid */
+    .salah-panel {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      flex-grow: 1;
-      padding-left: 4px;
-    }
-
-    .rate-wrapper {
-      display: flex;
-      align-items: baseline;
       gap: 6px;
-      margin-top: 6px;
     }
 
-    /* Fluid typography rules custom-tuned for 4 decimal layouts */
-    .rate-value {
-      font-size: clamp(2.0rem, 9.5vw, 3.1rem);
-      font-weight: 850;
-      color: var(--text-primary);
-      letter-spacing: -1px;
-      line-height: 0.95;
-    }
-
-    .rate-suffix {
-      font-size: clamp(0.95rem, 4vw, 1.25rem);
+    .salah-title {
+      font-size: 0.68rem;
       font-weight: 700;
-      color: #ffffff;
-      opacity: 0.9;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding-left: 2px;
     }
 
-    .label-hint {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-      margin-top: 4px;
+    .salah-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
     }
 
-    .widget-footer {
+    .prayer-slot {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px 4px;
+      text-align: center;
+    }
+
+    .prayer-slot.highlight {
+      border-color: rgba(212, 175, 55, 0.3);
+      background: rgba(212, 175, 55, 0.02);
+    }
+
+    .slot-name {
+      font-size: 0.62rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slot-time {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 2px;
+    }
+
+    /* Universal Footer */
+    .dash-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.68rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
       padding-top: 8px;
     }
 
-    .spin-animation {
-      animation: rotateCube 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    .rotation-lock {
+      animation: loopCycle 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    @keyframes rotateCube {
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes loopCycle { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <div class="widget-container">
-    <div class="widget-header">
-      <div class="currency-pairing">
-        <!-- Saudi Arabia Flag Icon -->
-        <img src="https://flagcdn.com/w80/sa.png" class="flag-circle" alt="Saudi Arabia">
-        <span class="currency-label">SAR</span>
-        <span class="arrow-split">➔</span>
-        <!-- India Flag Icon -->
-        <img src="https://flagcdn.com/w80/in.png" class="flag-circle" alt="India">
-        <span class="currency-label">INR</span>
+  <div class="dashboard-container">
+    <!-- Meta Header -->
+    <div class="dash-header">
+      <div class="location-badge">
+        <span class="location-dot"></span>
+        <span id="geoTarget">Locating...</span>
       </div>
-      
-      <div class="live-indicator">
-        <button class="refresh-action" id="syncBtn" onclick="fetchLiveExchangeRate()">↻</button>
+      <button class="refresh-trigger" id="masterSync" onclick="refreshAllPipelines()">↻</button>
+    </div>
+
+    <!-- Main Stack -->
+    <div class="dash-body">
+      <!-- Forex Asset -->
+      <div class="exchange-panel">
+        <div class="pairing-wrapper">
+          <img src="https://flagcdn.com/w80/sa.png" class="flag-node" alt="SA">
+          <span class="pair-lbl">SAR/INR</span>
+          <img src="https://flagcdn.com/w80/in.png" class="flag-node" alt="IN">
+        </div>
+        <div class="rate-string" id="forexOutput">--.----</div>
+      </div>
+
+      <!-- Prayer Asset -->
+      <div class="salah-panel">
+        <div class="salah-title">Salah Timings & Shuruq</div>
+        <div class="salah-grid">
+          <div class="prayer-slot"><div class="slot-name">Fajr</div><div class="slot-time" id="t-fajr">--:--</div></div>
+          <div class="prayer-slot highlight"><div class="slot-name">Sunrise</div><div class="slot-time" id="t-sunrise">--:--</div></div>
+          <div class="prayer-slot"><div class="slot-name">Dhuhr</div><div class="slot-time" id="t-dhuhr">--:--</div></div>
+          <div class="prayer-slot"><div class="slot-name">Asr</div><div class="slot-time" id="t-asr">--:--</div></div>
+          <div class="prayer-slot"><div class="slot-name">Maghrib</div><div class="slot-time" id="t-maghrib">--:--</div></div>
+          <div class="prayer-slot"><div class="slot-name">Isha</div><div class="slot-time" id="t-isha">--:--</div></div>
+        </div>
       </div>
     </div>
 
-    <div class="widget-body">
-      <div class="rate-wrapper">
-        <span class="rate-value" id="rateDisplay">--.----</span>
-        <span class="rate-suffix">INR</span>
-      </div>
-      <div class="label-hint">1 Saudi Riyal Base</div>
-    </div>
-
-    <div class="widget-footer">
-      <span id="timestampDisplay">Syncing live feed...</span>
-      <div class="live-indicator"><span class="pulse-dot"></span>&nbsp;Live</div>
+    <!-- Footer Meta -->
+    <div class="dash-footer">
+      <span id="syncMeta">Awaiting first sync...</span>
+      <span>Live Matrix</span>
     </div>
   </div>
 
   <script>
-    const TARGET_API = 'https://open.er-api.com/v6/latest/SAR';
-    const rateContainer = document.getElementById('rateDisplay');
-    const timeContainer = document.getElementById('timestampDisplay');
-    const syncBtn = document.getElementById('syncBtn');
+    const FOREX_ENDPOINT = 'https://open.er-api.com/v6/latest/SAR';
+    const PRAYER_ENDPOINT_BASE = 'https://api.aladhan.com/v1/timings';
+    
+    // Fallback safe reference coordinates (Riyadh, KSA)
+    const DEFAULT_LAT = 24.7136;
+    const DEFAULT_LNG = 46.6753;
+    const DEFAULT_CITY = "Riyadh";
 
-    // Retrieve historical storage points to prevent blank UI artifacts on cold starts
-    function initializeWidgetFromCache() {
-      const savedRate = localStorage.getItem('precision_sar_inr');
-      const savedTime = localStorage.getItem('precision_sar_time');
-      if (savedRate) rateContainer.textContent = parseFloat(savedRate).toFixed(4);
-      if (savedTime) timeContainer.textContent = `Synced: ${savedTime}`;
+    function loadLocalStorageCache() {
+      if(localStorage.getItem('prof_rate')) document.getElementById('forexOutput').textContent = localStorage.getItem('prof_rate');
+      if(localStorage.getItem('prof_geo')) document.getElementById('geoTarget').textContent = localStorage.getItem('prof_geo');
+      
+      const targetSlots = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      targetSlots.forEach(slot => {
+        const val = localStorage.getItem(`prof_t_${slot}`);
+        if(val) document.getElementById(`t-${slot}`).textContent = val;
+      });
+      if(localStorage.getItem('prof_sync')) document.getElementById('syncMeta').textContent = `Sync: ${localStorage.getItem('prof_sync')}`;
     }
 
-    async function fetchLiveExchangeRate() {
-      syncBtn.classList.add('spin-animation');
-      setTimeout(() => syncBtn.classList.remove('spin-animation'), 600);
+    async function refreshAllPipelines() {
+      const syncBtn = document.getElementById('masterSync');
+      syncBtn.classList.add('rotation-lock');
+      setTimeout(() => syncBtn.classList.remove('rotation-lock'), 700);
 
+      await runForexPipeline();
+      await runLocationAndPrayerPipeline();
+    }
+
+    async function runForexPipeline() {
       try {
-        const response = await fetch(TARGET_API);
-        if (!response.ok) throw new Error('Network response fault');
-        
-        const payload = await response.json();
-        const rawRate = payload.rates.INR;
-        
-        if (rawRate) {
-          // Locked strict 4 decimal precision processing
-          const precisionString = rawRate.toFixed(4);
-          rateContainer.textContent = precisionString;
-          
-          const timeStamp = new Date();
-          const localizedTime = timeStamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          timeContainer.textContent = `Synced: ${localizedTime}`;
+        const response = await fetch(FOREX_ENDPOINT);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        const rawRate = data.rates.INR;
+        if(rawRate) {
+          const processedRate = rawRate.toFixed(4);
+          document.getElementById('forexOutput').textContent = processedRate;
+          localStorage.setItem('prof_rate', processedRate);
+        }
+      } catch(e) { console.error("Forex loop error", e); }
+    }
 
-          localStorage.setItem('precision_sar_inr', precisionString);
-          localStorage.setItem('precision_sar_time', localizedTime);
-        }
-      } catch (exception) {
-        console.error('Data sync failed:', exception);
-        if (!localStorage.getItem('precision_sar_inr')) {
-          rateContainer.textContent = '00.0000';
-          timeContainer.textContent = 'Offline';
-        }
+    async function runLocationAndPrayerPipeline() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            executePrayerFetch(position.coords.latitude, position.coords.longitude, "Auto GPS");
+          },
+          () => { executeIPFallback(); },
+          { timeout: 6000 }
+        );
+      } else {
+        executeIPFallback();
       }
     }
 
-    // Execution sequence
-    initializeWidgetFromCache();
-    fetchLiveExchangeRate();
+    async function executeIPFallback() {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if(!res.ok) throw new Error();
+        const data = await res.json();
+        if(data.latitude && data.longitude) {
+          executePrayerFetch(data.latitude, data.longitude, data.city || "Auto IP");
+        } else { throw new Error(); }
+      } catch(e) {
+        console.warn("Using baseline geographic coordinates.");
+        executePrayerFetch(DEFAULT_LAT, DEFAULT_LNG, DEFAULT_CITY);
+      }
+    }
 
-    // Constant 15-minute background polling interval loop
-    setInterval(fetchLiveExchangeRate, 15 * 60 * 1000);
+    async function executePrayerFetch(lat, lng, label) {
+      try {
+        const dateParam = new Date().toISOString().split('T')[0]; // Current local ISO format
+        const response = await fetch(`${PRAYER_ENDPOINT_BASE}/${dateParam}?latitude=${lat}&longitude=${lng}`);
+        if(!response.ok) throw new Error();
+        
+        const payload = await response.json();
+        const timings = payload.data.timings;
+        
+        document.getElementById('geoTarget').textContent = label;
+        localStorage.setItem('prof_geo', label);
+
+        const mappings = {
+          'fajr': timings.Fajr,
+          'sunrise': timings.Sunrise,
+          'dhuhr': timings.Dhuhr,
+          'asr': timings.Asr,
+          'maghrib': timings.Maghrib,
+          'isha': timings.Isha
+        };
+
+        for (const [key, value] of Object.entries(mappings)) {
+          if(value) {
+            // Clean 24-hr layout parsing from API payload
+            document.getElementById(`t-${key}`).textContent = value;
+            localStorage.setItem(`prof_t_${key}`, value);
+          }
+        }
+
+        const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('syncMeta').textContent = `Sync: ${stamp}`;
+        localStorage.setItem('prof_sync', stamp);
+
+      } catch(e) { console.error("Prayer timing parsing system fault", e); }
+    }
+
+    // Initialize execution block
+    loadLocalStorageCache();
+    refreshAllPipelines();
+
+    // Constant 30-minute widget background structural sweep
+    setInterval(refreshAllPipelines, 30 * 60 * 1000);
   </script>
 </body>
 </html>
