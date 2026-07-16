@@ -7,13 +7,13 @@
   <style>
     :root {
       --bg-main: #000000; /* Pure AMOLED Black */
-      --glass-panel: rgba(255, 255, 255, 0.04);
-      --border-color: rgba(255, 255, 255, 0.07);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --glass-panel: rgba(255, 255, 255, 0.03);
       --neon-cyan: #00e5ff;
       --neon-magenta: #ff007f;
       --neon-yellow: #f1c40f;
       --text-white: #ffffff;
-      --text-gray: #94a3b8;
+      --text-gray: #8e94a0;
     }
 
     * {
@@ -30,7 +30,7 @@
       overflow: hidden;
     }
 
-    /* Zero-margin edge-to-edge layout core */
+    /* 100% boundary usage, absolute edge-to-edge styling */
     .widget-container {
       width: 100%;
       height: 100%;
@@ -38,46 +38,59 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 2px; 
+      padding: 1px; /* Minimal container safe margin */
     }
 
-    /* Clean, flat header layout with zero gray backgrounds */
+    /* Compact metadata row with zero gray background */
     .widget-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 4px 6px;
       border-bottom: 1px solid var(--border-color);
-      font-size: clamp(0.68rem, 3.2vw, 0.9rem);
-      font-weight: 700;
+      font-size: clamp(0.7rem, 3.2vw, 0.95rem);
+      font-weight: 750;
     }
 
     .meta-geo {
       color: var(--neon-cyan);
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .meta-countdown {
       color: var(--neon-yellow);
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .meta-sync-zone {
       color: var(--text-gray);
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       cursor: pointer;
     }
 
+    /* Flat rotate icon - no gray box, just a clean spin symbol next to time */
     #spinIcon {
       display: inline-block;
       color: var(--neon-cyan);
-      font-size: 1.05rem;
-      transition: transform 0.5s ease;
+      font-size: 1.15rem;
+      line-height: 1;
+      font-weight: bold;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Compact Exchange Rate Strip */
+    .spinning {
+      animation: spinLoop 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes spinLoop {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Compact Exchange Rate Row */
     .forex-row {
       background: var(--glass-panel);
       border: 1px solid var(--border-color);
@@ -85,7 +98,8 @@
       justify-content: space-between;
       align-items: center;
       padding: 4px 8px;
-      height: 12%;
+      margin: 1px 0;
+      height: 10%; /* Reduced height to allocate maximum room to Salah */
     }
 
     .pair-badge {
@@ -95,34 +109,34 @@
     }
 
     .flag-ico {
-      width: clamp(20px, 5vw, 25px);
-      height: clamp(20px, 5vw, 25px);
+      width: clamp(18px, 4.5vw, 22px);
+      height: clamp(18px, 4.5vw, 22px);
       border-radius: 50%;
       object-fit: cover;
       border: 1px solid #ffffff;
     }
 
     .pair-name {
-      font-size: clamp(0.8rem, 3.8vw, 1.1rem);
+      font-size: clamp(0.75rem, 3.5vw, 1rem);
       font-weight: 900;
       color: var(--text-white);
     }
 
+    /* Streamlined currency typography */
     .rate-text {
-      font-size: clamp(1.6rem, 8vw, 2.4rem);
+      font-size: clamp(1.4rem, 7.5vw, 2.1rem);
       font-weight: 950;
       color: var(--neon-cyan);
       letter-spacing: -0.5px;
     }
 
-    /* Maximum Area Grid for Salah Blocks */
+    /* Salah Grid - maximized vertically and horizontally */
     .salah-matrix {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(2, 1fr);
-      gap: 2px;
+      gap: 1px; /* Minimal line split */
       flex-grow: 1;
-      margin-top: 2px;
     }
 
     .salah-block {
@@ -132,34 +146,36 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 2px;
+      padding: 0px; /* Zero padding to squeeze text elements directly to the edge */
     }
 
+    /* Squeezed, highly visible typography */
     .block-name {
-      font-size: clamp(0.85rem, 4vw, 1.2rem);
-      font-weight: 800;
+      font-size: clamp(0.9rem, 4.2vw, 1.4rem); 
+      font-weight: 850;
       color: var(--text-gray);
       text-transform: uppercase;
     }
 
     .block-time {
-      font-size: clamp(1.1rem, 5.2vw, 1.7rem);
-      font-weight: 900;
+      font-size: clamp(1.25rem, 6.2vw, 2.0rem); 
+      font-weight: 950;
       color: var(--text-white);
       margin-top: 1px;
     }
 
     .time-suffix {
-      font-size: 0.55em;
-      font-weight: 600;
-      opacity: 0.75;
+      font-size: 0.52em;
+      font-weight: 750;
+      opacity: 0.85;
       margin-left: 1px;
     }
 
-    /* Edge-to-Edge Next Prayer Highlight Matrix */
+    /* Dynamic highlighted panel */
     .highlighted-active {
-      background: linear-gradient(135deg, var(--neon-magenta) 0%, #5b21b6 100%) !important;
+      background: linear-gradient(135deg, var(--neon-magenta) 0%, #4f46e5 100%) !important;
       border: 1.5px solid var(--neon-magenta) !important;
+      box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.3);
     }
 
     .highlighted-active .block-name {
@@ -168,18 +184,14 @@
 
     .highlighted-active .block-time {
       color: var(--neon-yellow) !important;
-      text-shadow: 0 0 6px rgba(241, 196, 15, 0.5);
-    }
-
-    .spin-active {
-      transform: rotate(360deg);
+      text-shadow: 0 0 6px rgba(241, 196, 15, 0.4);
     }
   </style>
 </head>
 <body>
 
   <div class="widget-container">
-    <!-- Top Dashboard Header -->
+    <!-- Header -->
     <div class="widget-header">
       <span class="meta-geo" id="geoMarker">Detecting...</span>
       <span class="meta-countdown" id="countdownBlock">Next: --:--</span>
@@ -189,7 +201,7 @@
       </div>
     </div>
 
-    <!-- Currency Block -->
+    <!-- Forex -->
     <div class="forex-row">
       <div class="pair-badge">
         <img src="https://flagcdn.com/w80/sa.png" class="flag-ico" alt="SA">
@@ -199,7 +211,7 @@
       <div class="rate-text" id="rateBlock">--.----</div>
     </div>
 
-    <!-- Max Density Grid -->
+    <!-- Salah Grid -->
     <div class="salah-matrix">
       <div class="salah-block" id="box-fajr">
         <span class="block-name">Fajr</span>
@@ -229,8 +241,10 @@
   </div>
 
   <script>
-    // --- CALIBRATION CONFIGURATION ---
-    // Change this value if you notice any minor variance from your preferred retail tracking app.
+    // --- MANUAL RATE OFFSET CALIBRATION ---
+    // Free APIs fetch standard wholesale interbank rates, while premium retail aggregators 
+    // like XE overlay dynamic spreads. If your local tick has a micro-variance, 
+    // adjust this decimal to calibrate your screen instantly!
     const RATE_OFFSET = 0.0600; 
 
     const FOREX_ENDPOINT = 'https://open.er-api.com/v6/latest/SAR';
@@ -244,17 +258,28 @@
     let targetNextPrayerTime = null;
     let targetNextPrayerName = "";
 
+    // Parse and convert 24h format safely, removing any time zone suffixes
     function convertTo12HourFormat(time24) {
       if (!time24) return '--:--';
-      let [hours, minutes] = time24.split(':').map(Number);
+      const cleanTime = time24.split(' ')[0];
+      let [hours, minutes] = cleanTime.split(':').map(Number);
+      if (isNaN(hours) || isNaN(minutes)) return '--:--';
+      
       const suffix = hours >= 12 ? 'PM' : 'AM';
       hours = hours % 12 || 12;
       return `${hours}:${minutes < 10 ? '0' + minutes : minutes}<span class="time-suffix">${suffix}</span>`;
     }
 
     function initFromLocalStorage() {
-      if (localStorage.getItem('fin_rate')) document.getElementById('rateBlock').textContent = localStorage.getItem('fin_rate');
-      if (localStorage.getItem('fin_geo')) document.getElementById('geoMarker').textContent = localStorage.getItem('fin_geo');
+      if (localStorage.getItem('fin_rate')) {
+        document.getElementById('rateBlock').textContent = localStorage.getItem('fin_rate');
+      }
+      if (localStorage.getItem('fin_geo')) {
+        document.getElementById('geoMarker').textContent = localStorage.getItem('fin_geo');
+      }
+      if (localStorage.getItem('fin_sync')) {
+        document.getElementById('syncTimestamp').textContent = localStorage.getItem('fin_sync');
+      }
       
       const prayers = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
       let reconstructionObj = {};
@@ -271,16 +296,16 @@
         cachedTimings = reconstructionObj;
         evaluateNextPrayerAndHighlight();
       }
-      if (localStorage.getItem('fin_sync')) document.getElementById('syncTimestamp').textContent = localStorage.getItem('fin_sync');
     }
 
-    async function manualSyncPipelines() {
+    // Runs updates completely asynchronously so a delay in one doesn't block the other
+    function manualSyncPipelines() {
       const icon = document.getElementById('spinIcon');
-      icon.style.transform = 'rotate(360deg)';
-      setTimeout(() => { icon.style.transform = 'rotate(0deg)'; }, 500);
+      icon.classList.add('spinning');
+      setTimeout(() => { icon.classList.remove('spinning'); }, 600);
 
-      await fetchForexData();
-      await fetchGeographicCoordinates();
+      fetchForexData();
+      fetchSalahDataByIP();
     }
 
     async function fetchForexData() {
@@ -290,7 +315,6 @@
         const data = await response.json();
         const baseRate = data.rates.INR;
         if (baseRate) {
-          // Applies your real-time manual spread offset
           const correctedRate = (baseRate + RATE_OFFSET).toFixed(4);
           document.getElementById('rateBlock').textContent = correctedRate;
           localStorage.setItem('fin_rate', correctedRate);
@@ -298,27 +322,25 @@
       } catch (e) { console.error("Forex Sync Error", e); }
     }
 
-    async function fetchGeographicCoordinates() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => { downloadSalahTimings(pos.coords.latitude, pos.coords.longitude, "Auto GPS"); },
-          () => { fallbackIPLocation(); },
-          { timeout: 4000 }
-        );
-      } else {
-        fallbackIPLocation();
-      }
-    }
+    async function fetchSalahDataByIP() {
+      // 1.5-second hard safety timeout to completely bypass geolocation hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
 
-    async function fallbackIPLocation() {
       try {
-        const res = await fetch('https://ipapi.co/json/');
-        if (!res.ok) throw new Error();
-        const data = await res.json();
+        const response = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        
         if (data.latitude && data.longitude) {
           downloadSalahTimings(data.latitude, data.longitude, data.city || "Auto IP");
-        } else { throw new Error(); }
-      } catch (e) {
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        console.warn("IP Geo timed out. Defaulting to Riyadh.");
         downloadSalahTimings(DEFAULT_LAT, DEFAULT_LNG, DEFAULT_CITY);
       }
     }
@@ -326,7 +348,7 @@
     async function downloadSalahTimings(lat, lng, label) {
       try {
         const dynamicISO = new Date().toISOString().split('T')[0];
-        // Umm Al-Qura Method (4) explicitly locked
+        // Umm Al-Qura calculation method (4) locked natively
         const response = await fetch(`${SALAH_ENDPOINT_BASE}/${dynamicISO}?latitude=${lat}&longitude=${lng}&method=4`);
         if (!response.ok) throw new Error();
         
@@ -386,7 +408,8 @@
 
       for (let item of timeline) {
         if (!item.time) continue;
-        const [h, m] = item.time.split(':').map(Number);
+        const cleanTime = item.time.split(' ')[0];
+        const [h, m] = cleanTime.split(':').map(Number);
         const pDate = new Date(now);
         pDate.setHours(h, m, 0, 0);
 
@@ -397,10 +420,11 @@
         }
       }
 
-      // If all prayers passed today, handle rollover to tomorrow's Fajr
+      // Handle midnight rollover to tomorrow's Fajr
       if (!nextFound) {
         nextFound = timeline[0];
-        const [h, m] = nextFound.time.split(':').map(Number);
+        const cleanTime = nextFound.time.split(' ')[0];
+        const [h, m] = cleanTime.split(':').map(Number);
         const tomorrow = new Date(now);
         tomorrow.setDate(now.getDate() + 1);
         tomorrow.setHours(h, m, 0, 0);
@@ -415,13 +439,15 @@
     }
 
     function updateCountdownClock() {
-      if (!targetNextPrayerTime) return;
+      if (!targetNextPrayerTime) {
+        document.getElementById('countdownBlock').textContent = "Next: --:--";
+        return;
+      }
 
       const rightNow = new Date();
       const millisecondDiff = targetNextPrayerTime - rightNow;
 
       if (millisecondDiff <= 0) {
-        // Countdown completed, automatically shift to next sequence block
         evaluateNextPrayerAndHighlight();
         return;
       }
@@ -434,13 +460,13 @@
         `${targetNextPrayerName}: -${hours}h ${minutes}m`;
     }
 
-    // Initialize Widget Context Loop
+    // Startup
     initFromLocalStorage();
     manualSyncPipelines();
 
-    // Background Structural Timers
-    setInterval(manualSyncPipelines, 15 * 60 * 1000); // 15 Minute Data Fetch Refresh
-    setInterval(updateCountdownClock, 1000);          // 1 Second Precise Live Ticker loop
+    // Core Intervals
+    setInterval(manualSyncPipelines, 15 * 60 * 1000); // 15-minute sync
+    setInterval(updateCountdownClock, 1000);          // 1-second live countdown
   </script>
 </body>
 </html>
