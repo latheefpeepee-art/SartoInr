@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMOLED Dynamic Ribbon Dashboard</title>
+  <title>AMOLED Snake Flow Ticker</title>
   <style>
     :root {
-      --bg-pure: #000000; /* Pure AMOLED black to melt into your wallpaper */
+      --bg-pure: #000000; /* Pure AMOLED Black */
       --glass-panel: rgba(255, 255, 255, 0.04);
       --border-thin: rgba(255, 255, 255, 0.09);
       --neon-cyan: #00e5ff;
@@ -30,7 +30,7 @@
       overflow: hidden;
     }
 
-    /* Strict edge-to-edge container layout mapping */
+    /* Edge-to-edge container layout mapping */
     .widget-root {
       width: 100%;
       height: 100%;
@@ -39,22 +39,22 @@
       flex-direction: column;
       justify-content: space-between;
       padding: 0px; 
+      position: relative;
     }
 
-    /* Top Panel: Left-aligned Countdown & Right-aligned Rate mapped to the exact same size */
+    /* Header Panel containing Left Countdown & Right Rate in the exact same size scale */
     .header-panel {
       display: flex;
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--border-thin);
+      padding: 10px 12px 8px 12px;
       background: var(--glass-panel);
+      position: relative;
     }
 
     .countdown-text, .rate-text {
-      /* Identical font scaling properties */
-      font-size: clamp(1.1rem, 5.2vw, 1.85rem); 
+      font-size: clamp(1.15rem, 5.4vw, 1.9rem); 
       font-weight: 950;
       letter-spacing: -0.5px;
       line-height: 1.1;
@@ -71,12 +71,32 @@
       text-align: right;
     }
 
-    /* Horizontal Ribbon layout row stretching across the base */
+    /* THE SNAKE FLOW LINE: Sits flush on the boundary edge. 
+       Width updates via JS, background gradient loops continuously */
+    .snake-progress-edge {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan), var(--neon-gold), var(--neon-magenta));
+      background-size: 300% 100%;
+      box-shadow: 0 0 10px var(--neon-magenta), 0 0 4px var(--neon-cyan);
+      animation: snakeSlither 3s linear infinite;
+      transition: width 1s linear;
+    }
+
+    @keyframes snakeSlither {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    /* Horizontal Ribbon layout row spanning edge-to-edge across the base */
     .salah-horizontal-ribbon {
       display: flex;
       width: 100%;
       flex-grow: 1;
-      gap: 1px; /* Razor thin clean boundaries */
+      gap: 1px; 
       margin-top: 1px;
     }
 
@@ -114,11 +134,11 @@
       font-size: 0.55em;
       font-weight: 800;
       color: var(--text-gray);
-      display: block; /* Forces vertical stacking to maximize room inside tight grid squares */
+      display: block; 
       margin-top: 2px;
     }
 
-    /* Clean hot pink column selection highlight block for active targets */
+    /* Dynamic hot pink column highlight block for active tracking target */
     .active-column-highlight {
       background: linear-gradient(180deg, var(--neon-magenta) 0%, rgba(255, 0, 127, 0.05) 100%) !important;
       border: 1.5px solid var(--neon-magenta) !important;
@@ -141,10 +161,12 @@
 <body>
 
   <div class="widget-root" onclick="forceSilentRefresh()">
-    <!-- Balanced Header Element Group -->
+    <!-- Header Panel with Integrated Floating Progress Edge Track -->
     <div class="header-panel">
       <div class="countdown-text" id="liveTickerOutput">NEXT: --:--:--</div>
       <div class="rate-text" id="rateBlock">--.---- SAR</div>
+      <!-- Animated flowing tracking node line -->
+      <div class="snake-progress-edge" id="snakeTrack"></div>
     </div>
 
     <!-- Horizontal Ribbon Grid Matrix -->
@@ -177,13 +199,13 @@
   </div>
 
   <script>
-    // Pulls direct live interbank exchange streams without caching lags
     const FX_URL = 'https://open.er-api.com/v6/latest/SAR';
     const PRAYER_URL_BASE = 'https://api.aladhan.com/v1/timings';
     const LAT_RIYADH = 24.7136;
     const LNG_RIYADH = 46.6753;
 
     let countdownTargetTime = null;
+    let countdownStartTime = null;
     let countdownTargetLabel = "";
     let localTimingsCache = null;
 
@@ -230,7 +252,7 @@
         const data = await response.json();
         const rawInterbankRate = data.rates.INR;
         if (rawInterbankRate) {
-          // Zero modifications applied to maintain pure match uniformity
+          // Zero modifications or artificial offsets applied to match financial benchmarks
           const precisionRateString = rawInterbankRate.toFixed(4);
           document.getElementById('rateBlock').textContent = precisionRateString + " SAR";
           localStorage.setItem('hz_rate', precisionRateString);
@@ -258,7 +280,6 @@
     async function executeSalahFetchCall(lat, lng) {
       try {
         const currentISOString = new Date().toISOString().split('T')[0];
-        // Umm Al-Qura calculation method (4) locked explicitly
         const response = await fetch(`${PRAYER_URL_BASE}/${currentISOString}?latitude=${lat}&longitude=${lng}&method=4`);
         if (!response.ok) throw new Error();
         
@@ -281,11 +302,21 @@
       } catch (err) { console.error("Salah fetch call pipeline down", err); }
     }
 
+    function parseTimeToDate(timeStr, referenceDate = new Date()) {
+      const cleanStr = timeStr.split(' ')[0];
+      const [hours, minutes] = cleanStr.split(':').map(Number);
+      const targetDate = new Date(referenceDate);
+      targetDate.setHours(hours, minutes, 0, 0);
+      return targetDate;
+    }
+
     function evaluateActivePrayerHighlight() {
       if (!localTimingsCache) return;
 
       const timeNow = new Date();
-      const prayerTimelineEvaluator = [
+      
+      // Order of calculation vectors across standard check boundaries
+      const prayersList = [
         { key: 'fajr', time: localTimingsCache.Fajr },
         { key: 'dhuhr', time: localTimingsCache.Dhuhr },
         { key: 'asr', time: localTimingsCache.Asr },
@@ -299,41 +330,51 @@
         if (node) node.classList.remove('active-column-highlight');
       });
 
-      let identifiedNextSalah = null;
+      let nextSalah = null;
+      let lastSalah = null;
 
-      for (let item of prayerTimelineEvaluator) {
-        if (!item.time) continue;
-        const pureTimeStr = item.time.split(' ')[0];
-        const [hours, minutes] = pureTimeStr.split(':').map(Number);
-        const loopInstanceDate = new Date(timeNow);
-        loopInstanceDate.setHours(hours, minutes, 0, 0);
-
-        if (loopInstanceDate > timeNow) {
-          identifiedNextSalah = item;
-          countdownTargetTime = loopInstanceDate;
+      // Find upcoming target node
+      for (let i = 0; i < prayersList.length; i++) {
+        const pDate = parseTimeToDate(prayersList[i].time, timeNow);
+        if (pDate > timeNow) {
+          nextSalah = prayersList[i];
+          countdownTargetTime = pDate;
+          
+          // Identify previous marker context to feed clean edge scaling lines
+          if (i > 0) {
+            lastSalah = prayersList[i - 1];
+            countdownStartTime = parseTimeToDate(lastSalah.time, timeNow);
+          } else {
+            // Last prayer was yesterday's Isha
+            lastSalah = prayersList[prayersList.length - 1];
+            const yesterday = new Date(timeNow);
+            yesterday.setDate(timeNow.getDate() - 1);
+            countdownStartTime = parseTimeToDate(lastSalah.time, yesterday);
+          }
           break;
         }
       }
 
-      if (!identifiedNextSalah) {
-        identifiedNextSalah = prayerTimelineEvaluator[0];
-        const pureTimeStr = identifiedNextSalah.time.split(' ')[0];
-        const [hours, minutes] = pureTimeStr.split(':').map(Number);
-        const tomorrowRolloverDate = new Date(timeNow);
-        tomorrowRolloverDate.setDate(timeNow.getDate() + 1);
-        tomorrowRolloverDate.setHours(hours, minutes, 0, 0);
-        countdownTargetTime = tomorrowRolloverDate;
+      // Rollover check vectors wrapping to tomorrow morning
+      if (!nextSalah) {
+        nextSalah = prayersList[0];
+        const tomorrow = new Date(timeNow);
+        tomorrow.setDate(timeNow.getDate() + 1);
+        countdownTargetTime = parseTimeToDate(nextSalah.time, tomorrow);
+        
+        lastSalah = prayersList[prayersList.length - 1];
+        countdownStartTime = parseTimeToDate(lastSalah.time, timeNow);
       }
 
-      countdownTargetLabel = identifiedNextSalah.key.toUpperCase();
-      const targetCardElement = document.getElementById(`card-${identifiedNextSalah.key}`);
+      countdownTargetLabel = nextSalah.key.toUpperCase();
+      const targetCardElement = document.getElementById(`card-${nextSalah.key}`);
       if (targetCardElement) targetCardElement.add('active-column-highlight');
 
       runLiveCountdownEngine();
     }
 
     function runLiveCountdownEngine() {
-      if (!countdownTargetTime) return;
+      if (!countdownTargetTime || !countdownStartTime) return;
 
       const now = new Date();
       const timeRemainingMs = countdownTargetTime - now;
@@ -343,6 +384,7 @@
         return;
       }
 
+      // 1-Second Precise Countdown Render Chain
       const totalSeconds = Math.floor(timeRemainingMs / 1000);
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -350,20 +392,28 @@
 
       document.getElementById('liveTickerOutput').textContent = 
         `${countdownTargetLabel}: -${hours}h ${minutes}m ${seconds}s`;
+
+      // DYNAMIC EDGE SNAKE SCALING: Maps the remaining time left relative to the full interval window
+      const totalWindowDuration = countdownTargetTime - countdownStartTime;
+      const progressPercent = (timeRemainingMs / totalWindowDuration) * 100;
+      
+      // Strict constraint guard protecting layout overflows
+      const clampedPercentage = Math.max(0, Math.min(100, progressPercent));
+      document.getElementById('snakeTrack').style.width = `${clampedPercentage}%`;
     }
 
-    // Dynamic visibility sensor: Recalculates everything the instant the launcher card becomes visible
+    // Unlocking visibility event adapter forcing synchronization cycles instantly on awake
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         forceSilentRefresh();
       }
     });
 
-    // Run Startup Execution Sequences
+    // Run Initialization Block
     readWidgetLocalStorage();
     forceSilentRefresh();
 
-    // Secondary UI local graphic timers running inside viewport visibility states
+    // Loop Interval driving the seconds display cleanly in the viewport stack
     setInterval(runLiveCountdownEngine, 1000);
   </script>
 </body>
