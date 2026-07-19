@@ -30,7 +30,7 @@
       overflow: hidden;
     }
 
-    /* Edge-to-edge container layout mapping */
+    /* Edge-to-edge layout frame maximizing screen space */
     .widget-root {
       width: 100%;
       height: 100%;
@@ -42,19 +42,20 @@
       position: relative;
     }
 
-    /* Header Panel containing Left Countdown & Right Rate in the exact same size scale */
+    /* Header Panel: Left Countdown & Right Rate in the absolute same font sizing */
     .header-panel {
       display: flex;
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      padding: 10px 12px 8px 12px;
+      padding: 10px 12px 10px 12px;
       background: var(--glass-panel);
       position: relative;
+      border-bottom: 1px solid var(--border-thin);
     }
 
     .countdown-text, .rate-text {
-      font-size: clamp(1.15rem, 5.4vw, 1.9rem); 
+      font-size: clamp(1.1rem, 5.2vw, 1.8rem); 
       font-weight: 950;
       letter-spacing: -0.5px;
       line-height: 1.1;
@@ -71,19 +72,18 @@
       text-align: right;
     }
 
-    /* THE SNAKE FLOW LINE: Sits flush on the boundary edge. 
-       Width updates via JS, background gradient loops continuously */
+    /* THE GLOWING SNAKE LINE: Sits flush on the boundary edge of the header row */
     .snake-progress-edge {
       position: absolute;
-      bottom: 0;
+      bottom: -1px;
       left: 0;
       height: 3px;
       width: 100%;
       background: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan), var(--neon-gold), var(--neon-magenta));
       background-size: 300% 100%;
       box-shadow: 0 0 10px var(--neon-magenta), 0 0 4px var(--neon-cyan);
-      animation: snakeSlither 3s linear infinite;
-      transition: width 1s linear;
+      animation: snakeSlither 2.5s linear infinite;
+      transition: width 0.5s linear;
     }
 
     @keyframes snakeSlither {
@@ -91,7 +91,7 @@
       100% { background-position: 300% 50%; }
     }
 
-    /* Horizontal Ribbon layout row spanning edge-to-edge across the base */
+    /* Horizontal Grid stretching wall-to-wall across the base */
     .salah-horizontal-ribbon {
       display: flex;
       width: 100%;
@@ -100,7 +100,7 @@
       margin-top: 1px;
     }
 
-    /* Two-line column structural blocks */
+    /* Two-line column stacked grid structures */
     .salah-column-card {
       flex: 1;
       display: flex;
@@ -109,25 +109,25 @@
       align-items: center;
       background: var(--glass-panel);
       border: 1px solid var(--border-thin);
-      padding: 4px 1px;
+      padding: 6px 1px;
       text-align: center;
     }
 
-    /* Line 1: Short Name Title */
+    /* Line 1: Short Name */
     .salah-name-line {
       font-size: clamp(0.78rem, 3.5vw, 1.25rem);
       font-weight: 850;
       color: var(--text-gray);
       text-transform: uppercase;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
 
-    /* Line 2: Salah Numeric Time */
+    /* Line 2: Numeric Time output */
     .salah-time-line {
       font-size: clamp(0.92rem, 4.4vw, 1.6rem);
       font-weight: 950;
       color: var(--text-white);
-      line-height: 1;
+      line-height: 1.1;
     }
 
     .ampm-marker {
@@ -138,7 +138,7 @@
       margin-top: 2px;
     }
 
-    /* Dynamic hot pink column highlight block for active tracking target */
+    /* Corrected active magenta border & glow overlay highlight properties */
     .active-column-highlight {
       background: linear-gradient(180deg, var(--neon-magenta) 0%, rgba(255, 0, 127, 0.05) 100%) !important;
       border: 1.5px solid var(--neon-magenta) !important;
@@ -161,15 +161,14 @@
 <body>
 
   <div class="widget-root" onclick="forceSilentRefresh()">
-    <!-- Header Panel with Integrated Floating Progress Edge Track -->
+    <!-- Header Block layout mapping text positions -->
     <div class="header-panel">
       <div class="countdown-text" id="liveTickerOutput">NEXT: --:--:--</div>
       <div class="rate-text" id="rateBlock">--.---- SAR</div>
-      <!-- Animated flowing tracking node line -->
       <div class="snake-progress-edge" id="snakeTrack"></div>
     </div>
 
-    <!-- Horizontal Ribbon Grid Matrix -->
+    <!-- Layout Grid blocks -->
     <div class="salah-horizontal-ribbon">
       <div class="salah-column-card" id="card-fajr">
         <span class="salah-name-line">Fajr</span>
@@ -252,12 +251,11 @@
         const data = await response.json();
         const rawInterbankRate = data.rates.INR;
         if (rawInterbankRate) {
-          // Zero modifications or artificial offsets applied to match financial benchmarks
           const precisionRateString = rawInterbankRate.toFixed(4);
           document.getElementById('rateBlock').textContent = precisionRateString + " SAR";
           localStorage.setItem('hz_rate', precisionRateString);
         }
-      } catch (err) { console.error("Forex update background pipeline down", err); }
+      } catch (err) { console.error("Forex loop down", err); }
     }
 
     async function lookupIPCoordinates() {
@@ -299,7 +297,7 @@
           }
         }
         evaluateActivePrayerHighlight();
-      } catch (err) { console.error("Salah fetch call pipeline down", err); }
+      } catch (err) { console.error("Salah loop down", err); }
     }
 
     function parseTimeToDate(timeStr, referenceDate = new Date()) {
@@ -314,8 +312,6 @@
       if (!localTimingsCache) return;
 
       const timeNow = new Date();
-      
-      // Order of calculation vectors across standard check boundaries
       const prayersList = [
         { key: 'fajr', time: localTimingsCache.Fajr },
         { key: 'dhuhr', time: localTimingsCache.Dhuhr },
@@ -333,19 +329,16 @@
       let nextSalah = null;
       let lastSalah = null;
 
-      // Find upcoming target node
       for (let i = 0; i < prayersList.length; i++) {
         const pDate = parseTimeToDate(prayersList[i].time, timeNow);
         if (pDate > timeNow) {
           nextSalah = prayersList[i];
           countdownTargetTime = pDate;
           
-          // Identify previous marker context to feed clean edge scaling lines
           if (i > 0) {
             lastSalah = prayersList[i - 1];
             countdownStartTime = parseTimeToDate(lastSalah.time, timeNow);
           } else {
-            // Last prayer was yesterday's Isha
             lastSalah = prayersList[prayersList.length - 1];
             const yesterday = new Date(timeNow);
             yesterday.setDate(timeNow.getDate() - 1);
@@ -355,7 +348,6 @@
         }
       }
 
-      // Rollover check vectors wrapping to tomorrow morning
       if (!nextSalah) {
         nextSalah = prayersList[0];
         const tomorrow = new Date(timeNow);
@@ -368,7 +360,9 @@
 
       countdownTargetLabel = nextSalah.key.toUpperCase();
       const targetCardElement = document.getElementById(`card-${nextSalah.key}`);
-      if (targetCardElement) targetCardElement.add('active-column-highlight');
+      
+      // FIXED SYNTAX PATH: Corrected from error-prone '.add' selector to formal class list modifier
+      if (targetCardElement) targetCardElement.classList.add('active-column-highlight');
 
       runLiveCountdownEngine();
     }
@@ -384,36 +378,36 @@
         return;
       }
 
-      // 1-Second Precise Countdown Render Chain
       const totalSeconds = Math.floor(timeRemainingMs / 1000);
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = Math.floor(totalSeconds % 60);
 
-      document.getElementById('liveTickerOutput').textContent = 
-        `${countdownTargetLabel}: -${hours}h ${minutes}m ${seconds}s`;
+      // Ensures hours, minutes, and seconds are perfectly padded with a leading zero
+      const hh = hours < 10 ? '0' + hours : hours;
+      const mm = minutes < 10 ? '0' + minutes : minutes;
+      const ss = seconds < 10 ? '0' + seconds : seconds;
 
-      // DYNAMIC EDGE SNAKE SCALING: Maps the remaining time left relative to the full interval window
+      document.getElementById('liveTickerOutput').textContent = `${countdownTargetLabel}: -${hh}h ${mm}m ${ss}s`;
+
+      // Update the snake flow bar position cleanly
       const totalWindowDuration = countdownTargetTime - countdownStartTime;
       const progressPercent = (timeRemainingMs / totalWindowDuration) * 100;
-      
-      // Strict constraint guard protecting layout overflows
       const clampedPercentage = Math.max(0, Math.min(100, progressPercent));
       document.getElementById('snakeTrack').style.width = `${clampedPercentage}%`;
     }
 
-    // Unlocking visibility event adapter forcing synchronization cycles instantly on awake
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         forceSilentRefresh();
       }
     });
 
-    // Run Initialization Block
+    // Run Initialization
     readWidgetLocalStorage();
     forceSilentRefresh();
 
-    // Loop Interval driving the seconds display cleanly in the viewport stack
+    // Constant 1-second interval execution loop driving ticker graphics safely
     setInterval(runLiveCountdownEngine, 1000);
   </script>
 </body>
