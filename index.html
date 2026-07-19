@@ -2,13 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- FORCE METRIC FRESHNESS: Completely hard-reloads the widget engine frame every 30 seconds to bypass background sleep -->
-  <meta http-equiv="refresh" content="30">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horizontal Matrix Core</title>
+  <title>Silent Smooth Ticker</title>
   <style>
     :root {
-      --bg-pure: #000000; /* Deep AMOLED Black */
+      --bg-pure: #000000; /* Pure AMOLED Black */
       --glass-panel: rgba(255, 255, 255, 0.03);
       --border-thin: rgba(255, 255, 255, 0.08);
       --neon-cyan: #00e5ff;
@@ -32,7 +30,6 @@
       overflow: hidden;
     }
 
-    /* Zero-margin architecture maximizing full screen layout area */
     .widget-root {
       width: 100%;
       height: 100%;
@@ -43,7 +40,7 @@
       padding: 2px;
     }
 
-    /* Header Panel: Left Countdown & Right Rate in the EXACT same text size */
+    /* Header: Countdown and Rate locked to the EXACT same typography size scale */
     .header-panel {
       display: flex;
       justify-content: space-between;
@@ -55,7 +52,6 @@
     }
 
     .countdown-text, .rate-text {
-      /* Identical responsive size pairing text sizing clamp */
       font-size: clamp(1.05rem, 4.6vw, 1.65rem); 
       font-weight: 950;
       letter-spacing: -0.5px;
@@ -73,16 +69,16 @@
       text-align: right;
     }
 
-    /* Horizontal Ribbon layout spanning edge-to-edge across the base */
+    /* Horizontal Grid Row Layout */
     .salah-horizontal-ribbon {
       display: flex;
       width: 100%;
       flex-grow: 1;
-      gap: 2px; /* Ultra-narrow alignment separation lines */
+      gap: 2px;
       margin-top: 2px;
     }
 
-    /* Two-line column stacked grid components */
+    /* Two-line column stacked grid blocks */
     .salah-column-card {
       flex: 1;
       display: flex;
@@ -96,7 +92,7 @@
       text-align: center;
     }
 
-    /* Line 1: Short Name layout styles */
+    /* Line 1: Short Name */
     .salah-name-line {
       font-size: clamp(0.72rem, 3.2vw, 1.1rem);
       font-weight: 850;
@@ -105,7 +101,7 @@
       margin-bottom: 4px;
     }
 
-    /* Line 2: Salah Numeric Time layout styles */
+    /* Line 2: Numeric Time */
     .salah-time-line {
       font-size: clamp(0.88rem, 4vw, 1.4rem);
       font-weight: 950;
@@ -117,15 +113,14 @@
       font-size: 0.58em;
       font-weight: 800;
       color: var(--text-gray);
-      display: block; /* Stacks AM/PM underneath numbers to defend horizontal column spacing */
-      margin-top: 1px;
+      display: block; 
+      margin-top: 2px;
     }
 
-    /* DYNAMIC ALERT OVERLAY: Hot-magenta highlight frame for your next active tracking target */
+    /* Next active prayer dynamic highlight row alert card */
     .active-column-highlight {
       background: linear-gradient(180deg, var(--neon-magenta) 0%, rgba(255, 0, 127, 0.08) 100%) !important;
       border: 1.5px solid var(--neon-magenta) !important;
-      box-shadow: 0 4px 15px rgba(255, 0, 127, 0.2);
     }
 
     .active-column-highlight .salah-name-line {
@@ -144,14 +139,13 @@
 </head>
 <body>
 
-  <div class="widget-root" onclick="forceManualDataRefresh()">
-    <!-- Header: Left/Right Uniform Layout Block -->
+  <!-- Tapping anywhere triggers a smooth silent manual refresh loop -->
+  <div class="widget-root" onclick="silentBackgroundRefresh()">
     <div class="header-panel">
       <div class="countdown-text" id="liveTickerOutput">NEXT: --:--:--</div>
       <div class="rate-text" id="rateBlock">--.---- SAR/INR</div>
     </div>
 
-    <!-- Horizontal Stack Row Components -->
     <div class="salah-horizontal-ribbon">
       <div class="salah-column-card" id="card-fajr">
         <span class="salah-name-line">Fajr</span>
@@ -181,98 +175,94 @@
   </div>
 
   <script>
-    // --- VALUE CALIBRATION MODIFIER ---
-    // Public tickers aggregate base interbank pools. If your banking portal or XE app index 
-    // prints a different retail layout layer spread, edit this setting to calibrate instantly.
-    const HARDWARE_SPREAD_OFFSET = 0.0600; 
+    // Adjust this optional decimal if you want to align variations with retail tickers
+    const SPREAD_CALIBRATION_VALUE = 0.0600; 
 
     const API_EXCHANGE = 'https://open.er-api.com/v6/latest/SAR';
     const API_SALAH = 'https://api.aladhan.com/v1/timings';
+    const FALLBACK_LAT = 24.7136;
+    const FALLBACK_LNG = 46.6753;
 
-    const LAT_RIYADH = 24.7136;
-    const LNG_RIYADH = 46.6753;
+    let countdownTimeTarget = null;
+    let countdownLabelTarget = "";
+    let localMemoryTimings = null;
 
-    let countdownTargetTimeInstance = null;
-    let countdownTargetLabelString = "";
-    let localCacheTimingsPointer = null;
-
-    function processTo12HourLayoutString(time24) {
+    function formatTo12Hour(time24) {
       if (!time24) return '--:--';
-      const stripString = time24.split(' ')[0];
-      let [h, m] = stripString.split(':').map(Number);
+      const cleanRaw = time24.split(' ')[0];
+      let [h, m] = cleanRaw.split(':').map(Number);
       const standardSuffix = h >= 12 ? 'PM' : 'AM';
       h = h % 12 || 12;
       return `${h}:${m < 10 ? '0' + m : m}<span class="ampm-marker">${standardSuffix}</span>`;
     }
 
-    function recoverWidgetMemoryCache() {
+    function readStorageCache() {
       if (localStorage.getItem('hz_rate')) {
         document.getElementById('rateBlock').textContent = localStorage.getItem('hz_rate') + " SAR/INR";
       }
       
-      const identifiers = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      let parsingReconstructor = {};
-      identifiers.forEach(id => {
+      const IDs = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      let cacheRebuilder = {};
+      IDs.forEach(id => {
         const val = localStorage.getItem(`hz_t_${id}`);
         if (val) {
-          document.getElementById(`t-${id}`).innerHTML = processTo12HourLayoutString(val);
-          const uppercaseApiKey = id.charAt(0).toUpperCase() + id.slice(1);
-          parsingReconstructor[uppercaseApiKey] = val;
+          document.getElementById(`t-${id}`).innerHTML = formatTo12Hour(val);
+          const upperKey = id.charAt(0).toUpperCase() + id.slice(1);
+          cacheRebuilder[upperKey] = val;
         }
       });
       
-      if (Object.keys(parsingReconstructor).length === 6) {
-        localCacheTimingsPointer = parsingReconstructor;
-        calculateUpcomingSalahHighlight();
+      if (Object.keys(cacheRebuilder).length === 6) {
+        localMemoryTimings = cacheRebuilder;
+        recalculateActiveHighlight();
       }
     }
 
-    function forceManualDataRefresh() {
-      fetchLiveExchangeRates();
-      lookupIPGeographicCoordinates();
+    function silentBackgroundRefresh() {
+      fetchExchangeDataSilent();
+      lookupLocationByIP();
     }
 
-    async function fetchLiveExchangeRates() {
+    async function fetchExchangeDataSilent() {
       try {
         const response = await fetch(API_EXCHANGE);
         if (!response.ok) throw new Error();
         const data = await response.json();
-        const rawWholesaleRate = data.rates.INR;
-        if (rawWholesaleRate) {
-          const processedPrecisionRate = (rawWholesaleRate + HARDWARE_SPREAD_OFFSET).toFixed(4);
-          document.getElementById('rateBlock').textContent = processedPrecisionRate + " SAR/INR";
-          localStorage.setItem('hz_rate', processedPrecisionRate);
+        const basePrice = data.rates.INR;
+        if (basePrice) {
+          const processedRate = (basePrice + SPREAD_CALIBRATION_VALUE).toFixed(4);
+          document.getElementById('rateBlock').textContent = processedRate + " SAR/INR";
+          localStorage.setItem('hz_rate', processedRate);
         }
-      } catch (err) { console.error("FX sync error logic block", err); }
+      } catch (err) { console.error("Forex update background failed", err); }
     }
 
-    async function lookupIPGeographicCoordinates() {
-      const controllerNode = new AbortController();
-      const backupTimeoutInt = setTimeout(() => controllerNode.abort(), 1500);
+    async function lookupLocationByIP() {
+      const routerController = new AbortController();
+      const networkTimeout = setTimeout(() => routerController.abort(), 1500);
 
       try {
-        const response = await fetch('https://ipapi.co/json/', { signal: controllerNode.signal });
-        clearTimeout(backupTimeoutInt);
-        if (!response.ok) throw new Error();
-        const data = await response.json();
-        if (data.latitude && data.longitude) {
-          executeSalahNetworkPipelineCall(data.latitude, data.longitude);
+        const resIp = await fetch('https://ipapi.co/json/', { signal: routerController.signal });
+        clearTimeout(networkTimeout);
+        if (!resIp.ok) throw new Error();
+        const ipData = await resIp.json();
+        if (ipData.latitude && ipData.longitude) {
+          executeSalahPipelineCall(ipData.latitude, ipData.longitude);
         } else { throw new Error(); }
       } catch (e) {
-        executeSalahNetworkPipelineCall(LAT_RIYADH, LNG_RIYADH); // Direct Riyadh performance backup
+        executeSalahPipelineCall(FALLBACK_LAT, FALLBACK_LNG);
       }
     }
 
-    async function executeSalahNetworkPipelineCall(lat, lng) {
+    async function executeSalahPipelineCall(lat, lng) {
       try {
-        const datelineISO = new Date().toISOString().split('T')[0];
-        // Umm Al-Qura (Method 4) calculation profile explicitly locked
-        const response = await fetch(`${API_SALAH}/${datelineISO}?latitude=${lat}&longitude=${lng}&method=4`);
+        const dateISO = new Date().toISOString().split('T')[0];
+        const response = await fetch(`${API_SALAH}/${dateISO}?latitude=${lat}&longitude=${lng}&method=4`);
         if (!response.ok) throw new Error();
         
         const packageData = await response.json();
         const timings = packageData.data.timings;
-        localCacheTimingsPointer = timings;
+        localMemoryTimings = timings;
 
         const syncMatrix = {
           'fajr': timings.Fajr, 'sunrise': timings.Sunrise, 'dhuhr': timings.Dhuhr,
@@ -281,24 +271,24 @@
 
         for (const [key, val] of Object.entries(syncMatrix)) {
           if (val) {
-            document.getElementById(`t-${key}`).innerHTML = processTo12HourLayoutString(val);
+            document.getElementById(`t-${key}`).innerHTML = formatTo12Hour(val);
             localStorage.setItem(`hz_t_${key}`, val);
           }
         }
-        calculateUpcomingSalahHighlight();
-      } catch (err) { console.error("Salah network sync error line", err); }
+        recalculateActiveHighlight();
+      } catch (err) { console.error("Salah background fetch failed", err); }
     }
 
-    function calculateUpcomingSalahHighlight() {
-      if (!localCacheTimingsPointer) return;
+    function recalculateActiveHighlight() {
+      if (!localMemoryTimings) return;
 
-      const deviceTimeSnapshot = new Date();
+      const rightNow = new Date();
       const prayerTimelineEvaluator = [
-        { key: 'fajr', time: localCacheTimingsPointer.Fajr },
-        { key: 'dhuhr', time: localCacheTimingsPointer.Dhuhr },
-        { key: 'asr', time: localCacheTimingsPointer.Asr },
-        { key: 'maghrib', time: localCacheTimingsPointer.Maghrib },
-        { key: 'isha', time: localCacheTimingsPointer.Isha }
+        { key: 'fajr', time: localMemoryTimings.Fajr },
+        { key: 'dhuhr', time: localMemoryTimings.Dhuhr },
+        { key: 'asr', time: localMemoryTimings.Asr },
+        { key: 'maghrib', time: localMemoryTimings.Maghrib },
+        { key: 'isha', time: localMemoryTimings.Isha }
       ];
 
       const cards = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -307,67 +297,66 @@
         if (node) node.classList.remove('active-column-highlight');
       });
 
-      let identifiedNextSalahNode = null;
+      let nextSalahNode = null;
 
       for (let item of prayerTimelineEvaluator) {
         if (!item.time) continue;
         const pureTimeStr = item.time.split(' ')[0];
         const [hours, minutes] = pureTimeStr.split(':').map(Number);
-        const loopInstanceDate = new Date(deviceTimeSnapshot);
+        const loopInstanceDate = new Date(rightNow);
         loopInstanceDate.setHours(hours, minutes, 0, 0);
 
-        if (loopInstanceDate > deviceTimeSnapshot) {
-          identifiedNextSalahNode = item;
-          countdownTargetTimeInstance = loopInstanceDate;
+        if (loopInstanceDate > rightNow) {
+          nextSalahNode = item;
+          countdownTimeTarget = loopInstanceDate;
           break;
         }
       }
 
-      // Rollover validation sweep targeting tomorrow's Fajr window if night cycle closes
-      if (!identifiedNextSalahNode) {
-        identifiedNextSalahNode = prayerTimelineEvaluator[0];
-        const pureTimeStr = identifiedNextSalahNode.time.split(' ')[0];
+      if (!nextSalahNode) {
+        nextSalahNode = prayerTimelineEvaluator[0];
+        const pureTimeStr = nextSalahNode.time.split(' ')[0];
         const [hours, minutes] = pureTimeStr.split(':').map(Number);
-        const tomorrowRolloverDate = new Date(deviceTimeSnapshot);
-        tomorrowRolloverDate.setDate(deviceTimeSnapshot.getDate() + 1);
+        const tomorrowRolloverDate = new Date(rightNow);
+        tomorrowRolloverDate.setDate(rightNow.getDate() + 1);
         tomorrowRolloverDate.setHours(hours, minutes, 0, 0);
-        countdownTargetTimeInstance = tomorrowRolloverDate;
+        countdownTimeTarget = tomorrowRolloverDate;
       }
 
-      countdownTargetLabelString = identifiedNextSalahNode.key.toUpperCase();
-      const targetCardElement = document.getElementById(`card-${identifiedNextSalahNode.key}`);
+      countdownLabelTarget = nextSalahNode.key.toUpperCase();
+      const targetCardElement = document.getElementById(`card-${nextSalahNode.key}`);
       if (targetCardElement) targetCardElement.classList.add('active-column-highlight');
 
-      executeLiveCountdownTickerEngine();
+      runLiveCountdownEngine();
     }
 
-    function executeLiveCountdownTickerEngine() {
-      if (!countdownTargetTimeInstance) return;
+    function runLiveCountdownEngine() {
+      if (!countdownTimeTarget) return;
 
-      const rightNow = new Date();
-      const timeRemainingMs = countdownTargetTimeInstance - rightNow;
+      const now = new Date();
+      const timeRemainingMs = countdownTimeTarget - now;
 
       if (timeRemainingMs <= 0) {
-        calculateUpcomingSalahHighlight();
+        recalculateActiveHighlight();
         return;
       }
 
-      const conversionSecondsTotal = Math.floor(timeRemainingMs / 1000);
-      const hoursOutput = Math.floor(conversionSecondsTotal / 3600);
-      const minutesOutput = Math.floor((conversionSecondsTotal % 3600) / 60);
-      const secondsOutput = Math.floor(conversionSecondsTotal % 60);
+      const totalSeconds = Math.floor(timeRemainingMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
 
-      // Left-aligned continuous precise countdown string
       document.getElementById('liveTickerOutput').textContent = 
-        `${countdownTargetLabelString}: -${hoursOutput}h ${minutesOutput}m ${secondsOutput}s`;
+        `${countdownLabelTarget}: -${hours}h ${minutes}m ${seconds}s`;
     }
 
-    // Execution sequence loops
-    recoverWidgetMemoryCache();
-    forceManualDataRefresh();
+    // Load instantly from data cache
+    readStorageCache();
+    silentBackgroundRefresh();
 
-    // Fine-tuned background ticker rendering loops
-    setInterval(executeLiveCountdownTickerEngine, 1000);
+    // Timers handle data changes silently without refreshing the window frame
+    setInterval(runLiveCountdownEngine, 1000);       // Live 1-second countdown ticker
+    setInterval(silentBackgroundRefresh, 5 * 60 * 1000); // Silent background API data check every 5 minutes
   </script>
 </body>
 </html>
