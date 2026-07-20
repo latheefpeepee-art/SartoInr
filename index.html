@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMOLED Flow Ticker with Sparkline</title>
+  <title>AMOLED Max Bumped Ticker</title>
   <style>
     :root {
       --bg-pure: #000000; /* Pure AMOLED Black */
@@ -13,7 +13,7 @@
       --neon-magenta: #ff007f;
       --neon-gold: #f1c40f;
       --text-white: #ffffff;
-      --text-gray: #a6adbb;
+      --text-gray: #8e94a0;
     }
 
     * {
@@ -30,7 +30,7 @@
       overflow: hidden;
     }
 
-    /* Edge-to-edge core shell mapping layout properties */
+    /* Edge-to-edge container layout mapping */
     .widget-root {
       width: 100%;
       height: 100%;
@@ -72,7 +72,7 @@
       text-align: right;
     }
 
-    /* THE GLOWING SNAKE TRACKLINE: Sits flush on the boundary edge of the header row */
+    /* GLOWING SNAKE TRACKLINE: Sits flush on the boundary edge of the header row */
     .snake-progress-edge {
       position: absolute;
       bottom: -1px;
@@ -91,10 +91,10 @@
       100% { background-position: 300% 50%; }
     }
 
-    /* HIGH-DENSITY SPARKLINE ROW: Zero margins, edge-to-edge layout execution */
+    /* SPARKLINE ROW: Edge-to-edge layout execution */
     .chart-container {
       width: 100%;
-      height: 42px; /* Compact area profile feeding the space back to headers/Salah */
+      height: 38px;
       background: rgba(0, 229, 255, 0.01);
       border-bottom: 1px solid var(--border-thin);
       position: relative;
@@ -132,11 +132,12 @@
       display: flex;
       width: 100%;
       flex-grow: 1;
-      gap: 1px; 
-      margin-top: 1px;
+      gap: 2px; 
+      margin-top: 2px;
+      align-items: stretch;
     }
 
-    /* Two-line column stacked grid structures */
+    /* Standard Two-line column structural blocks */
     .salah-column-card {
       flex: 1;
       display: flex;
@@ -145,25 +146,28 @@
       align-items: center;
       background: var(--glass-panel);
       border: 1px solid var(--border-thin);
-      padding: 6px 1px;
+      padding: 4px 1px;
       text-align: center;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     /* Line 1: Short Name Title */
     .salah-name-line {
-      font-size: clamp(0.78rem, 3.5vw, 1.25rem);
-      font-weight: 850;
+      font-size: clamp(0.72rem, 3.2vw, 1.1rem);
+      font-weight: 800;
       color: var(--text-gray);
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      transition: all 0.3s ease;
     }
 
     /* Line 2: Salah Numeric Time */
     .salah-time-line {
-      font-size: clamp(0.92rem, 4.4vw, 1.6rem);
-      font-weight: 950;
+      font-size: clamp(0.85rem, 4.0vw, 1.45rem);
+      font-weight: 900;
       color: var(--text-white);
       line-height: 1.1;
+      transition: all 0.3s ease;
     }
 
     .ampm-marker {
@@ -174,23 +178,46 @@
       margin-top: 2px;
     }
 
-    /* Active magenta row highlight border parameters */
+    /* =========================================================
+       MAXIMUM "BUMPED" ACTIVE NEXT SALAH OVERLAY
+       ========================================================= */
     .active-column-highlight {
-      background: linear-gradient(180deg, var(--neon-magenta) 0%, rgba(255, 0, 127, 0.05) 100%) !important;
-      border: 1.5px solid var(--neon-magenta) !important;
+      flex: 1.45 !important; /* Dynamically expands width */
+      background: linear-gradient(180deg, #ff007f 0%, #4f46e5 100%) !important;
+      border: 2px solid #ff007f !important;
+      transform: translateY(-3px);
+      z-index: 10;
+      border-radius: 8px;
+      animation: pulseActiveGlow 2s infinite alternate;
+    }
+
+    @keyframes pulseActiveGlow {
+      0% {
+        box-shadow: 0 0 12px rgba(255, 0, 127, 0.7), inset 0 0 8px rgba(241, 196, 15, 0.4);
+      }
+      100% {
+        box-shadow: 0 0 24px rgba(255, 0, 127, 1), inset 0 0 16px rgba(241, 196, 15, 0.7);
+      }
     }
 
     .active-column-highlight .salah-name-line {
       color: #ffffff !important;
+      font-size: clamp(0.88rem, 4.2vw, 1.35rem) !important;
+      font-weight: 950 !important;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.5px;
     }
 
     .active-column-highlight .salah-time-line {
-      color: var(--neon-gold) !important;
-      text-shadow: 0 0 6px rgba(241, 196, 15, 0.4);
+      color: #ffff00 !important; /* Striking High-Contrast Yellow */
+      font-size: clamp(1.05rem, 5.2vw, 1.8rem) !important;
+      font-weight: 950 !important;
+      text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
     }
 
     .active-column-highlight .ampm-marker {
       color: #ffffff !important;
+      font-weight: 900 !important;
     }
   </style>
 </head>
@@ -206,9 +233,7 @@
 
     <!-- 1-Month Trendline Matrix Row -->
     <div class="chart-container">
-      <svg id="sparklineSvg" viewBox="0 0 300 40" preserveAspectRatio="none">
-        <!-- SVG Vectors are rendered programmatically via performance JS nodes -->
-      </svg>
+      <svg id="sparklineSvg" viewBox="0 0 300 38" preserveAspectRatio="none"></svg>
     </div>
 
     <!-- Horizontal Ribbon Grid Layout -->
@@ -260,7 +285,6 @@
       return `${h}:${m < 10 ? '0' + m : m}<span class="ampm-marker">${suffix}</span>`;
     }
 
-    // High-fidelity baseline data parsing tracking realistic 30-day index curves
     function getHistoricalChartArray() {
       const storageKey = 'hz_chart_history_array';
       const cached = localStorage.getItem(storageKey);
@@ -290,7 +314,7 @@
       const dataDelta = maxVal - minVal || 1;
 
       const canvasWidth = 300;
-      const canvasHeight = 40;
+      const canvasHeight = 38;
       const nodeCount = rates.length;
 
       let linePoints = "";
@@ -358,16 +382,15 @@
           document.getElementById('rateBlock').textContent = precisionRateString + " SAR";
           localStorage.setItem('hz_rate', precisionRateString);
 
-          // Update data history log sequence
           let history = getHistoricalChartArray();
           if (history[history.length - 1] !== rawInterbankRate) {
             history.push(rawInterbankRate);
-            if (history.length > 30) history.shift(); // Clamps interval window to strict 1-month loop
+            if (history.length > 30) history.shift();
             localStorage.setItem('hz_chart_history_array', JSON.stringify(history));
           }
           renderSparklineChart(history);
         }
-      } catch (err) { console.error("Forex loop fault connection drop", err); }
+      } catch (err) { console.error("Forex loop down", err); }
     }
 
     async function lookupIPCoordinates() {
@@ -409,7 +432,7 @@
           }
         }
         evaluateActivePrayerHighlight();
-      } catch (err) { console.error("Salah fetch fault alignment error", err); }
+      } catch (err) { console.error("Salah loop down", err); }
     }
 
     function parseTimeToDate(timeStr, referenceDate = new Date()) {
@@ -511,11 +534,9 @@
       }
     });
 
-    // Run Initialization Blocks
     readWidgetLocalStorage();
     forceSilentRefresh();
 
-    // Live continuous ticker interval loop triggers
     setInterval(runLiveCountdownEngine, 1000);
   </script>
 </body>
