@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMOLED Max Bumped Ticker</title>
+  <title>AMOLED Rate & Salah Ribbon Widget</title>
   <style>
     :root {
       --bg-pure: #000000; /* Pure AMOLED Black */
@@ -30,7 +30,7 @@
       overflow: hidden;
     }
 
-    /* Edge-to-edge container layout mapping */
+    /* Root container mapped to launcher screen edges */
     .widget-root {
       width: 100%;
       height: 100%;
@@ -42,56 +42,58 @@
       position: relative;
     }
 
-    /* Top Dashboard Header Block */
+    /* Top Dashboard Header */
     .header-panel {
       display: flex;
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      padding: 10px 12px 10px 12px;
+      padding: 8px 12px;
       background: var(--glass-panel);
       position: relative;
       border-bottom: 1px solid var(--border-thin);
     }
 
-    .countdown-text, .rate-text {
+    /* Small font city label */
+    .city-name {
+      font-size: clamp(0.68rem, 3.0vw, 0.85rem);
+      font-weight: 700;
+      color: var(--neon-gold);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* Rate Section with Circular Flags */
+    .rate-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .flag-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .flag-circle {
+      width: clamp(16px, 4.5vw, 22px);
+      height: clamp(16px, 4.5vw, 22px);
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #ffffff;
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+    }
+
+    .rate-text {
       font-size: clamp(1.1rem, 5.2vw, 1.8rem); 
       font-weight: 950;
+      color: var(--neon-cyan);
       letter-spacing: -0.5px;
       line-height: 1.1;
     }
 
-    .countdown-text {
-      color: var(--neon-gold);
-      text-align: left;
-      text-transform: uppercase;
-    }
-
-    .rate-text {
-      color: var(--neon-cyan);
-      text-align: right;
-    }
-
-    /* GLOWING SNAKE TRACKLINE: Sits flush on the boundary edge of the header row */
-    .snake-progress-edge {
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      height: 3px;
-      width: 100%;
-      background: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan), var(--neon-gold), var(--neon-magenta));
-      background-size: 300% 100%;
-      box-shadow: 0 0 10px var(--neon-magenta), 0 0 4px var(--neon-cyan);
-      animation: snakeSlither 2.5s linear infinite;
-      transition: width 0.5s linear;
-    }
-
-    @keyframes snakeSlither {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 300% 50%; }
-    }
-
-    /* SPARKLINE ROW: Edge-to-edge layout execution */
+    /* 1-Month Sparkline Chart Container */
     .chart-container {
       width: 100%;
       height: 38px;
@@ -127,7 +129,7 @@
       opacity: 0.06;
     }
 
-    /* Horizontal Ribbon layout spanning edge-to-edge across the base */
+    /* Horizontal Ribbon Grid Layout */
     .salah-horizontal-ribbon {
       display: flex;
       width: 100%;
@@ -137,7 +139,7 @@
       align-items: stretch;
     }
 
-    /* Standard Two-line column structural blocks */
+    /* Standard Two-Line Column Cards */
     .salah-column-card {
       flex: 1;
       display: flex;
@@ -178,11 +180,9 @@
       margin-top: 2px;
     }
 
-    /* =========================================================
-       MAXIMUM "BUMPED" ACTIVE NEXT SALAH OVERLAY
-       ========================================================= */
+    /* MAXIMUM BUMPED ACTIVE CARD HIGHLIGHT */
     .active-column-highlight {
-      flex: 1.45 !important; /* Dynamically expands width */
+      flex: 1.45 !important; /* Expands horizontal width */
       background: linear-gradient(180deg, #ff007f 0%, #4f46e5 100%) !important;
       border: 2px solid #ff007f !important;
       transform: translateY(-3px);
@@ -209,7 +209,7 @@
     }
 
     .active-column-highlight .salah-time-line {
-      color: #ffff00 !important; /* Striking High-Contrast Yellow */
+      color: #ffff00 !important; /* High-Contrast Yellow */
       font-size: clamp(1.05rem, 5.2vw, 1.8rem) !important;
       font-weight: 950 !important;
       text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
@@ -226,12 +226,20 @@
   <div class="widget-root" onclick="forceSilentRefresh()">
     <!-- Header Panel -->
     <div class="header-panel">
-      <div class="countdown-text" id="liveTickerOutput">NEXT: --:--:--</div>
-      <div class="rate-text" id="rateBlock">--.---- SAR</div>
-      <div class="snake-progress-edge" id="snakeTrack"></div>
+      <!-- Small Font City Name -->
+      <div class="city-name" id="cityName">Riyadh</div>
+      
+      <!-- Circle Flags + Rate Display -->
+      <div class="rate-wrapper">
+        <div class="flag-group">
+          <img src="https://flagcdn.com/w80/sa.png" class="flag-circle" alt="Saudi Arabia">
+          <img src="https://flagcdn.com/w80/in.png" class="flag-circle" alt="India">
+        </div>
+        <div class="rate-text" id="rateBlock">--.---- SAR</div>
+      </div>
     </div>
 
-    <!-- 1-Month Trendline Matrix Row -->
+    <!-- 1-Month Trendline Row -->
     <div class="chart-container">
       <svg id="sparklineSvg" viewBox="0 0 300 38" preserveAspectRatio="none"></svg>
     </div>
@@ -270,10 +278,8 @@
     const PRAYER_URL_BASE = 'https://api.aladhan.com/v1/timings';
     const LAT_RIYADH = 24.7136;
     const LNG_RIYADH = 46.6753;
+    const DEFAULT_CITY = "Riyadh";
 
-    let countdownTargetTime = null;
-    let countdownStartTime = null;
-    let countdownTargetLabel = "";
     let localTimingsCache = null;
 
     function formatTo12HourStr(time24) {
@@ -346,6 +352,9 @@
       if (localStorage.getItem('hz_rate')) {
         document.getElementById('rateBlock').textContent = localStorage.getItem('hz_rate') + " SAR";
       }
+      if (localStorage.getItem('hz_city')) {
+        document.getElementById('cityName').textContent = localStorage.getItem('hz_city');
+      }
       
       const lines = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
       let cacheReconstructor = {};
@@ -403,15 +412,18 @@
         if (!response.ok) throw new Error();
         const data = await response.json();
         if (data.latitude && data.longitude) {
-          executeSalahFetchCall(data.latitude, data.longitude);
+          executeSalahFetchCall(data.latitude, data.longitude, data.city || DEFAULT_CITY);
         } else { throw new Error(); }
       } catch (e) {
-        executeSalahFetchCall(LAT_RIYADH, LNG_RIYADH);
+        executeSalahFetchCall(LAT_RIYADH, LNG_RIYADH, DEFAULT_CITY);
       }
     }
 
-    async function executeSalahFetchCall(lat, lng) {
+    async function executeSalahFetchCall(lat, lng, cityName) {
       try {
+        document.getElementById('cityName').textContent = cityName;
+        localStorage.setItem('hz_city', cityName);
+
         const currentISOString = new Date().toISOString().split('T')[0];
         const response = await fetch(`${PRAYER_URL_BASE}/${currentISOString}?latitude=${lat}&longitude=${lng}&method=4`);
         if (!response.ok) throw new Error();
@@ -462,70 +474,21 @@
       });
 
       let nextSalah = null;
-      let lastSalah = null;
 
       for (let i = 0; i < prayersList.length; i++) {
         const pDate = parseTimeToDate(prayersList[i].time, timeNow);
         if (pDate > timeNow) {
           nextSalah = prayersList[i];
-          countdownTargetTime = pDate;
-          
-          if (i > 0) {
-            lastSalah = prayersList[i - 1];
-            countdownStartTime = parseTimeToDate(lastSalah.time, timeNow);
-          } else {
-            lastSalah = prayersList[prayersList.length - 1];
-            const yesterday = new Date(timeNow);
-            yesterday.setDate(timeNow.getDate() - 1);
-            countdownStartTime = parseTimeToDate(lastSalah.time, yesterday);
-          }
           break;
         }
       }
 
       if (!nextSalah) {
         nextSalah = prayersList[0];
-        const tomorrow = new Date(timeNow);
-        tomorrow.setDate(timeNow.getDate() + 1);
-        countdownTargetTime = parseTimeToDate(nextSalah.time, tomorrow);
-        
-        lastSalah = prayersList[prayersList.length - 1];
-        countdownStartTime = parseTimeToDate(lastSalah.time, timeNow);
       }
 
-      countdownTargetLabel = nextSalah.key.toUpperCase();
       const targetCardElement = document.getElementById(`card-${nextSalah.key}`);
       if (targetCardElement) targetCardElement.classList.add('active-column-highlight');
-
-      runLiveCountdownEngine();
-    }
-
-    function runLiveCountdownEngine() {
-      if (!countdownTargetTime || !countdownStartTime) return;
-
-      const now = new Date();
-      const timeRemainingMs = countdownTargetTime - now;
-
-      if (timeRemainingMs <= 0) {
-        evaluateActivePrayerHighlight();
-        return;
-      }
-
-      const totalSeconds = Math.floor(timeRemainingMs / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = Math.floor(totalSeconds % 60);
-
-      const hh = hours < 10 ? '0' + hours : hours;
-      const mm = minutes < 10 ? '0' + minutes : minutes;
-      const ss = seconds < 10 ? '0' + seconds : seconds;
-
-      document.getElementById('liveTickerOutput').textContent = `${countdownTargetLabel}: -${hh}h ${mm}m ${ss}s`;
-
-      const totalWindowDuration = countdownTargetTime - countdownStartTime;
-      const progressPercent = (timeRemainingMs / totalWindowDuration) * 100;
-      const clampedPercentage = Math.max(0, Math.min(100, progressPercent));
-      document.getElementById('snakeTrack').style.width = `${clampedPercentage}%`;
     }
 
     document.addEventListener("visibilitychange", () => {
@@ -537,7 +500,8 @@
     readWidgetLocalStorage();
     forceSilentRefresh();
 
-    setInterval(runLiveCountdownEngine, 1000);
+    // Check active prayer status every minute
+    setInterval(evaluateActivePrayerHighlight, 60000);
   </script>
 </body>
 </html>
