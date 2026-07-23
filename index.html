@@ -1,507 +1,423 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMOLED Rate & Salah Ribbon Widget</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>24H Salah Clock</title>
   <style>
     :root {
-      --bg-pure: #000000; /* Pure AMOLED Black */
-      --glass-panel: rgba(255, 255, 255, 0.04);
-      --border-thin: rgba(255, 255, 255, 0.09);
-      --neon-cyan: #00e5ff;
-      --neon-magenta: #ff007f;
-      --neon-gold: #f1c40f;
-      --text-white: #ffffff;
-      --text-gray: #8e94a0;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --day-color: #f59e0b;
+      --night-color: #334155;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
     }
 
-    body, html {
-      width: 100%;
-      height: 100vh;
-      background: transparent;
-      overflow: hidden;
-    }
-
-    /* Root container mapped to launcher screen edges */
-    .widget-root {
-      width: 100%;
-      height: 100%;
-      background: var(--bg-pure);
+    body {
+      background-color: var(--bg);
+      color: var(--text);
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 0px; 
-      position: relative;
-    }
-
-    /* Top Dashboard Header */
-    .header-panel {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--glass-panel);
-      position: relative;
-      border-bottom: 1px solid var(--border-thin);
-    }
-
-    /* Small font city label */
-    .city-name {
-      font-size: clamp(0.68rem, 3.0vw, 0.85rem);
-      font-weight: 700;
-      color: var(--neon-gold);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-    }
-
-    /* Rate Section with Circular Flags */
-    .rate-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .flag-group {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .flag-circle {
-      width: clamp(16px, 4.5vw, 22px);
-      height: clamp(16px, 4.5vw, 22px);
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1px solid #ffffff;
-      box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
-    }
-
-    .rate-text {
-      font-size: clamp(1.1rem, 5.2vw, 1.8rem); 
-      font-weight: 950;
-      color: var(--neon-cyan);
-      letter-spacing: -0.5px;
-      line-height: 1.1;
-    }
-
-    /* 1-Month Sparkline Chart Container */
-    .chart-container {
-      width: 100%;
-      height: 38px;
-      background: rgba(0, 229, 255, 0.01);
-      border-bottom: 1px solid var(--border-thin);
-      position: relative;
-      display: flex;
-      align-items: flex-end;
-    }
-
-    #sparklineSvg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .chart-line {
-      fill: none;
-      stroke: var(--neon-cyan);
-      stroke-width: 2.5;
-      stroke-linecap: round;
-    }
-
-    .chart-glow {
-      fill: none;
-      stroke: var(--neon-cyan);
-      stroke-width: 6;
-      opacity: 0.25;
-      stroke-linecap: round;
-    }
-
-    .chart-shading {
-      fill: url(#chartGlowGrad);
-      opacity: 0.06;
-    }
-
-    /* Horizontal Ribbon Grid Layout */
-    .salah-horizontal-ribbon {
-      display: flex;
-      width: 100%;
-      flex-grow: 1;
-      gap: 2px; 
-      margin-top: 2px;
-      align-items: stretch;
-    }
-
-    /* Standard Two-Line Column Cards */
-    .salah-column-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: var(--glass-panel);
-      border: 1px solid var(--border-thin);
-      padding: 4px 1px;
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 20px 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .city {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .search-row {
+      display: none;
+      width: 100%;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .search-row.active { display: flex; }
+
+    .search-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid #475569;
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    /* Clock Outer Box */
+    .clock-box {
+      position: relative;
+      width: 320px;
+      height: 320px;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Center Info */
+    .center-info {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 130px;
+      height: 130px;
+      background: var(--bg);
+      border: 2px solid #334155;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    /* Line 1: Short Name Title */
-    .salah-name-line {
-      font-size: clamp(0.72rem, 3.2vw, 1.1rem);
+    .next-name {
+      font-size: 1.1rem;
       font-weight: 800;
-      color: var(--text-gray);
-      text-transform: uppercase;
-      margin-bottom: 3px;
-      transition: all 0.3s ease;
+      color: #facc15;
     }
 
-    /* Line 2: Salah Numeric Time */
-    .salah-time-line {
-      font-size: clamp(0.85rem, 4.0vw, 1.45rem);
-      font-weight: 900;
-      color: var(--text-white);
-      line-height: 1.1;
-      transition: all 0.3s ease;
+    .countdown {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f43f5e;
+      font-family: monospace;
     }
 
-    .ampm-marker {
-      font-size: 0.55em;
-      font-weight: 800;
-      color: var(--text-gray);
-      display: block; 
+    .sub-text {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    /* Bottom Table */
+    .prayer-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      width: 100%;
+      gap: 4px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #334155;
+    }
+
+    .prayer-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 2px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 3px solid var(--p-color, #38bdf8);
+    }
+
+    .prayer-item.active {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .p-name {
+      font-size: 0.6rem;
+      color: var(--p-color, #38bdf8);
+      font-weight: 700;
+    }
+
+    .p-time {
+      font-size: 0.7rem;
+      font-weight: 700;
       margin-top: 2px;
     }
 
-    /* MAXIMUM BUMPED ACTIVE CARD HIGHLIGHT */
-    .active-column-highlight {
-      flex: 1.45 !important; /* Expands horizontal width */
-      background: linear-gradient(180deg, #ff007f 0%, #4f46e5 100%) !important;
-      border: 2px solid #ff007f !important;
-      transform: translateY(-3px);
-      z-index: 10;
-      border-radius: 8px;
-      animation: pulseActiveGlow 2s infinite alternate;
-    }
+    /* Clock Hands */
+    .hand-hour { stroke: #facc15; stroke-width: 7; stroke-linecap: round; }
+    .hand-min { stroke: #38bdf8; stroke-width: 3.5; stroke-linecap: round; }
+    .hand-sec { stroke: #f43f5e; stroke-width: 1.5; stroke-linecap: round; }
 
-    @keyframes pulseActiveGlow {
-      0% {
-        box-shadow: 0 0 12px rgba(255, 0, 127, 0.7), inset 0 0 8px rgba(241, 196, 15, 0.4);
-      }
-      100% {
-        box-shadow: 0 0 24px rgba(255, 0, 127, 1), inset 0 0 16px rgba(241, 196, 15, 0.7);
-      }
-    }
-
-    .active-column-highlight .salah-name-line {
-      color: #ffffff !important;
-      font-size: clamp(0.88rem, 4.2vw, 1.35rem) !important;
-      font-weight: 950 !important;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-      letter-spacing: 0.5px;
-    }
-
-    .active-column-highlight .salah-time-line {
-      color: #ffff00 !important; /* High-Contrast Yellow */
-      font-size: clamp(1.05rem, 5.2vw, 1.8rem) !important;
-      font-weight: 950 !important;
-      text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
-    }
-
-    .active-column-highlight .ampm-marker {
-      color: #ffffff !important;
-      font-weight: 900 !important;
-    }
+    /* Text on Dial */
+    .dial-num { fill: var(--text-muted); font-size: 8px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
   </style>
 </head>
 <body>
 
-  <div class="widget-root" onclick="forceSilentRefresh()">
-    <!-- Header Panel -->
-    <div class="header-panel">
-      <!-- Small Font City Name -->
-      <div class="city-name" id="cityName">Riyadh</div>
-      
-      <!-- Circle Flags + Rate Display -->
-      <div class="rate-wrapper">
-        <div class="flag-group">
-          <img src="https://flagcdn.com/w80/sa.png" class="flag-circle" alt="Saudi Arabia">
-          <img src="https://flagcdn.com/w80/in.png" class="flag-circle" alt="India">
-        </div>
-        <div class="rate-text" id="rateBlock">--.---- SAR</div>
+  <div class="widget">
+    <!-- Header -->
+    <div class="header">
+      <span class="city" id="cityDisplay">Riyadh</span>
+      <button class="btn" id="changeCityBtn">Change City</button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-row" id="searchRow">
+      <input type="text" id="cityInput" placeholder="Enter City (e.g. London)" />
+      <button class="btn" id="saveBtn">Set</button>
+    </div>
+
+    <!-- 24-Hour Circular Clock -->
+    <div class="clock-box">
+      <svg viewBox="0 0 360 360">
+        <!-- Outer Dial Background -->
+        <circle cx="180" cy="180" r="130" fill="none" stroke="var(--night-color)" stroke-width="10" />
+
+        <!-- Day Arc (Sunrise to Sunset) -->
+        <path id="dayArc" fill="none" stroke="var(--day-color)" stroke-width="10" stroke-linecap="round" />
+
+        <!-- 1-24 Hour Numbers -->
+        <g id="dialNumbers"></g>
+
+        <!-- Prayer Dots -->
+        <g id="prayerDots"></g>
+
+        <!-- Needles (Default pointing UP at 00:00) -->
+        <line id="hourHand" class="hand-hour" x1="180" y1="180" x2="180" y2="115" />
+        <line id="minHand" class="hand-min" x1="180" y1="180" x2="180" y2="75" />
+        <line id="secHand" class="hand-sec" x1="180" y1="180" x2="180" y2="65" />
+        <circle cx="180" cy="180" r="6" fill="#facc15" />
+      </svg>
+
+      <!-- Center Overlay -->
+      <div class="center-info">
+        <span class="sub-text">NEXT SALAH</span>
+        <span class="next-name" id="nextName">--</span>
+        <span class="countdown" id="countdown">00:00:00</span>
+        <span class="sub-text" id="targetTime">at --:--</span>
       </div>
     </div>
 
-    <!-- 1-Month Trendline Row -->
-    <div class="chart-container">
-      <svg id="sparklineSvg" viewBox="0 0 300 38" preserveAspectRatio="none"></svg>
-    </div>
-
-    <!-- Horizontal Ribbon Grid Layout -->
-    <div class="salah-horizontal-ribbon">
-      <div class="salah-column-card" id="card-fajr">
-        <span class="salah-name-line">Fajr</span>
-        <span class="salah-time-line" id="t-fajr">--:--</span>
-      </div>
-      <div class="salah-column-card" id="card-sunrise">
-        <span class="salah-name-line">Sunrise</span>
-        <span class="salah-time-line" id="t-sunrise">--:--</span>
-      </div>
-      <div class="salah-column-card" id="card-dhuhr">
-        <span class="salah-name-line">Dhuhr</span>
-        <span class="salah-time-line" id="t-dhuhr">--:--</span>
-      </div>
-      <div class="salah-column-card" id="card-asr">
-        <span class="salah-name-line">Asr</span>
-        <span class="salah-time-line" id="t-asr">--:--</span>
-      </div>
-      <div class="salah-column-card" id="card-maghrib">
-        <span class="salah-name-line">Maghrib</span>
-        <span class="salah-time-line" id="t-maghrib">--:--</span>
-      </div>
-      <div class="salah-column-card" id="card-isha">
-        <span class="salah-name-line">Isha</span>
-        <span class="salah-time-line" id="t-isha">--:--</span>
-      </div>
-    </div>
+    <!-- Bottom Prayer Times -->
+    <div class="prayer-grid" id="prayerGrid"></div>
   </div>
 
   <script>
-    const FX_URL = 'https://open.er-api.com/v6/latest/SAR';
-    const PRAYER_URL_BASE = 'https://api.aladhan.com/v1/timings';
-    const LAT_RIYADH = 24.7136;
-    const LNG_RIYADH = 46.6753;
-    const DEFAULT_CITY = "Riyadh";
+    const COLORS = {
+      Fajr: "#38bdf8",     // Sky Blue
+      Sunrise: "#facc15",  // Gold
+      Dhuhr: "#f97316",    // Orange
+      Asr: "#ef4444",      // Red
+      Maghrib: "#ec4899",  // Pink
+      Isha: "#a855f7"      // Purple
+    };
 
-    let localTimingsCache = null;
+    let city = localStorage.getItem("salah_city") || "Riyadh";
+    let timings = null;
 
-    function formatTo12HourStr(time24) {
-      if (!time24) return '--:--';
-      const cleanRaw = time24.split(' ')[0];
-      let [h, m] = cleanRaw.split(':').map(Number);
-      const suffix = h >= 12 ? 'PM' : 'AM';
-      h = h % 12 || 12;
-      return `${h}:${m < 10 ? '0' + m : m}<span class="ampm-marker">${suffix}</span>`;
+    // Helper: Time (HH:MM) to Angle (0° = 12 o'clock top)
+    function timeToAngle(timeStr) {
+      if (!timeStr) return 0;
+      const [h, m] = timeStr.split(":").map(Number);
+      return ((h * 60 + m) / 1440) * 360;
     }
 
-    function getHistoricalChartArray() {
-      const storageKey = 'hz_chart_history_array';
-      const cached = localStorage.getItem(storageKey);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch (e) {}
+    // Helper: Angle to (X, Y) Coordinates
+    function getXY(cx, cy, r, angle) {
+      const rad = ((angle - 90) * Math.PI) / 180;
+      return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+    }
+
+    // Draw 1-24 Numbers on Clock Ring
+    function drawDialNumbers() {
+      const group = document.getElementById("dialNumbers");
+      group.innerHTML = "";
+      for (let i = 1; i <= 24; i++) {
+        const angle = (i / 24) * 360;
+        const pos = getXY(180, 180, 110, angle);
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", pos.x);
+        txt.setAttribute("y", pos.y);
+        txt.setAttribute("class", "dial-num");
+        txt.textContent = i;
+        group.appendChild(txt);
       }
-      
-      const realBaseline = [
-        24.52, 24.55, 24.61, 24.58, 24.40, 24.45, 24.52, 24.68, 
-        24.74, 24.71, 24.67, 24.69, 24.72, 24.78, 24.85, 24.91, 
-        24.88, 24.95, 25.02, 25.15, 25.22, 25.18, 25.25, 25.36, 
-        25.42, 25.55, 25.61, 25.68, 25.72, 25.76
-      ];
-      localStorage.setItem(storageKey, JSON.stringify(realBaseline));
-      return realBaseline;
     }
 
-    function renderSparklineChart(rates) {
-      const svg = document.getElementById('sparklineSvg');
-      if (!svg || !rates || rates.length === 0) return;
+    // Draw Day Arc (Sunrise to Sunset)
+    function drawDayArc(sunriseAngle, sunsetAngle) {
+      const start = getXY(180, 180, 130, sunsetAngle);
+      const end = getXY(180, 180, 130, sunriseAngle);
+      const largeArc = sunsetAngle - sunriseAngle <= 180 ? "0" : "1";
+      const d = `M ${start.x} ${start.y} A 130 130 0 ${largeArc} 0 ${end.x} ${end.y}`;
+      document.getElementById("dayArc").setAttribute("d", d);
+    }
 
-      const minVal = Math.min(...rates) * 0.998;
-      const maxVal = Math.max(...rates) * 1.002;
-      const dataDelta = maxVal - minVal || 1;
+    // Fetch Prayer Times
+    async function loadPrayerTimes() {
+      document.getElementById("cityDisplay").textContent = city;
+      try {
+        const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=&method=4`);
+        const data = await res.json();
+        if (data.code === 200) {
+          timings = data.data.timings;
+          renderData();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
-      const canvasWidth = 300;
-      const canvasHeight = 38;
-      const nodeCount = rates.length;
+    // Render Dots and Bottom Table
+    function renderData() {
+      if (!timings) return;
 
-      let linePoints = "";
-      let shadingAreaPoints = `0,${canvasHeight} `;
+      // 1. Day Arc
+      drawDayArc(timeToAngle(timings.Sunrise), timeToAngle(timings.Sunset));
 
-      rates.forEach((val, idx) => {
-        const xPos = (idx / (nodeCount - 1)) * canvasWidth;
-        const yPos = canvasHeight - ((val - minVal) / dataDelta) * canvasHeight;
-        linePoints += `${xPos},${yPos} `;
-        shadingAreaPoints += `${xPos},${yPos} `;
+      // 2. Prayer Dots on Dial
+      const dotsGroup = document.getElementById("prayerDots");
+      dotsGroup.innerHTML = "";
+      const keys = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+
+      keys.forEach((key) => {
+        const angle = timeToAngle(timings[key]);
+        const pos = getXY(180, 180, 130, angle);
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", pos.x);
+        dot.setAttribute("cy", pos.y);
+        dot.setAttribute("r", "5");
+        dot.setAttribute("fill", COLORS[key]);
+        dot.setAttribute("id", `dot-${key}`);
+        dotsGroup.appendChild(dot);
       });
 
-      shadingAreaPoints += `${canvasWidth},${canvasHeight}`;
-
-      svg.innerHTML = `
-        <defs>
-          <linearGradient id="chartGlowGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--neon-cyan)"/>
-            <stop offset="100%" stop-color="transparent"/>
-          </linearGradient>
-        </defs>
-        <path class="chart-shading" d="M ${shadingAreaPoints}" />
-        <path class="chart-glow" d="M ${linePoints}" />
-        <path class="chart-line" d="M ${linePoints}" />
-      `;
-    }
-
-    function readWidgetLocalStorage() {
-      if (localStorage.getItem('hz_rate')) {
-        document.getElementById('rateBlock').textContent = localStorage.getItem('hz_rate') + " SAR";
-      }
-      if (localStorage.getItem('hz_city')) {
-        document.getElementById('cityName').textContent = localStorage.getItem('hz_city');
-      }
-      
-      const lines = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      let cacheReconstructor = {};
-      lines.forEach(id => {
-        const value = localStorage.getItem(`hz_t_${id}`);
-        if (value) {
-          document.getElementById(`t-${id}`).innerHTML = formatTo12HourStr(value);
-          const apiKey = id.charAt(0).toUpperCase() + id.slice(1);
-          cacheReconstructor[apiKey] = value;
-        }
+      // 3. Bottom Table
+      const grid = document.getElementById("prayerGrid");
+      grid.innerHTML = "";
+      keys.forEach((key) => {
+        const item = document.createElement("div");
+        item.className = "prayer-item";
+        item.id = `item-${key}`;
+        item.style.setProperty("--p-color", COLORS[key]);
+        item.innerHTML = `
+          <span class="p-name">${key}</span>
+          <span class="p-time">${timings[key]}</span>
+        `;
+        grid.appendChild(item);
       });
-      
-      if (Object.keys(cacheReconstructor).length === 6) {
-        localTimingsCache = cacheReconstructor;
-        evaluateActivePrayerHighlight();
-      }
-
-      renderSparklineChart(getHistoricalChartArray());
     }
 
-    function forceSilentRefresh() {
-      fetchLiveRate();
-      lookupIPCoordinates();
+    // Real-time Needles & Countdown Loop
+    function startClock() {
+      setInterval(() => {
+        const now = new Date();
+        const hrs = now.getHours();
+        const mins = now.getMinutes();
+        const secs = now.getSeconds();
+
+        // Needles Rotation
+        const hourDeg = ((hrs + mins / 60 + secs / 3600) / 24) * 360;
+        const minDeg = ((mins + secs / 60) / 60) * 360;
+        const secDeg = (secs / 60) * 360;
+
+        document.getElementById("hourHand").setAttribute("transform", `rotate(${hourDeg}, 180, 180)`);
+        document.getElementById("minHand").setAttribute("transform", `rotate(${minDeg}, 180, 180)`);
+        document.getElementById("secHand").setAttribute("transform", `rotate(${secDeg}, 180, 180)`);
+
+        if (timings) updateCountdown(now);
+      }, 1000);
     }
 
-    async function fetchLiveRate() {
-      try {
-        const response = await fetch(FX_URL);
-        if (!response.ok) throw new Error();
-        const data = await response.json();
-        const rawInterbankRate = data.rates.INR;
-        if (rawInterbankRate) {
-          const precisionRateString = rawInterbankRate.toFixed(4);
-          document.getElementById('rateBlock').textContent = precisionRateString + " SAR";
-          localStorage.setItem('hz_rate', precisionRateString);
+    // Countdown Logic
+    function updateCountdown(now) {
+      const keys = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+      let nextKey = null;
+      let nextTarget = null;
 
-          let history = getHistoricalChartArray();
-          if (history[history.length - 1] !== rawInterbankRate) {
-            history.push(rawInterbankRate);
-            if (history.length > 30) history.shift();
-            localStorage.setItem('hz_chart_history_array', JSON.stringify(history));
-          }
-          renderSparklineChart(history);
-        }
-      } catch (err) { console.error("Forex loop down", err); }
-    }
-
-    async function lookupIPCoordinates() {
-      const abortNode = new AbortController();
-      const fallbackTimer = setTimeout(() => abortNode.abort(), 1500);
-
-      try {
-        const response = await fetch('https://ipapi.co/json/', { signal: abortNode.signal });
-        clearTimeout(fallbackTimer);
-        if (!response.ok) throw new Error();
-        const data = await response.json();
-        if (data.latitude && data.longitude) {
-          executeSalahFetchCall(data.latitude, data.longitude, data.city || DEFAULT_CITY);
-        } else { throw new Error(); }
-      } catch (e) {
-        executeSalahFetchCall(LAT_RIYADH, LNG_RIYADH, DEFAULT_CITY);
-      }
-    }
-
-    async function executeSalahFetchCall(lat, lng, cityName) {
-      try {
-        document.getElementById('cityName').textContent = cityName;
-        localStorage.setItem('hz_city', cityName);
-
-        const currentISOString = new Date().toISOString().split('T')[0];
-        const response = await fetch(`${PRAYER_URL_BASE}/${currentISOString}?latitude=${lat}&longitude=${lng}&method=4`);
-        if (!response.ok) throw new Error();
-        
-        const payload = await response.json();
-        const timings = payload.data.timings;
-        localTimingsCache = timings;
-
-        const syncMatrix = {
-          'fajr': timings.Fajr, 'sunrise': timings.Sunrise, 'dhuhr': timings.Dhuhr,
-          'asr': timings.Asr, 'maghrib': timings.Maghrib, 'isha': timings.Isha
-        };
-
-        for (const [key, val] of Object.entries(syncMatrix)) {
-          if (val) {
-            document.getElementById(`t-${key}`).innerHTML = formatTo12HourStr(val);
-            localStorage.setItem(`hz_t_${key}`, val);
-          }
-        }
-        evaluateActivePrayerHighlight();
-      } catch (err) { console.error("Salah loop down", err); }
-    }
-
-    function parseTimeToDate(timeStr, referenceDate = new Date()) {
-      const cleanStr = timeStr.split(' ')[0];
-      const [hours, minutes] = cleanStr.split(':').map(Number);
-      const targetDate = new Date(referenceDate);
-      targetDate.setHours(hours, minutes, 0, 0);
-      return targetDate;
-    }
-
-    function evaluateActivePrayerHighlight() {
-      if (!localTimingsCache) return;
-
-      const timeNow = new Date();
-      const prayersList = [
-        { key: 'fajr', time: localTimingsCache.Fajr },
-        { key: 'dhuhr', time: localTimingsCache.Dhuhr },
-        { key: 'asr', time: localTimingsCache.Asr },
-        { key: 'maghrib', time: localTimingsCache.Maghrib },
-        { key: 'isha', time: localTimingsCache.Isha }
-      ];
-
-      const cards = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
-      cards.forEach(c => {
-        const node = document.getElementById(`card-${c}`);
-        if (node) node.classList.remove('active-column-highlight');
-      });
-
-      let nextSalah = null;
-
-      for (let i = 0; i < prayersList.length; i++) {
-        const pDate = parseTimeToDate(prayersList[i].time, timeNow);
-        if (pDate > timeNow) {
-          nextSalah = prayersList[i];
+      for (let key of keys) {
+        const [h, m] = timings[key].split(":").map(Number);
+        const t = new Date(now);
+        t.setHours(h, m, 0, 0);
+        if (t > now) {
+          nextKey = key;
+          nextTarget = t;
           break;
         }
       }
 
-      if (!nextSalah) {
-        nextSalah = prayersList[0];
+      if (!nextKey) {
+        nextKey = "Fajr";
+        const [h, m] = timings["Fajr"].split(":").map(Number);
+        nextTarget = new Date(now);
+        nextTarget.setDate(nextTarget.getDate() + 1);
+        nextTarget.setHours(h, m, 0, 0);
       }
 
-      const targetCardElement = document.getElementById(`card-${nextSalah.key}`);
-      if (targetCardElement) targetCardElement.classList.add('active-column-highlight');
+      const diff = Math.floor((nextTarget - now) / 1000);
+      const pad = (n) => String(n).padStart(2, "0");
+      const hh = pad(Math.floor(diff / 3600));
+      const mm = pad(Math.floor((diff % 3600) / 60));
+      const ss = pad(diff % 60);
+
+      document.getElementById("nextName").textContent = nextKey;
+      document.getElementById("nextName").style.color = COLORS[nextKey];
+      document.getElementById("countdown").textContent = `-${hh}:${mm}:${ss}`;
+      document.getElementById("targetTime").textContent = `at ${timings[nextKey]}`;
+
+      // Highlights
+      document.querySelectorAll(".prayer-item").forEach(el => el.classList.remove("active"));
+      const activeItem = document.getElementById(`item-${nextKey}`);
+      if (activeItem) activeItem.classList.add("active");
     }
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        forceSilentRefresh();
+    // Event Handlers
+    document.getElementById("changeCityBtn").onclick = () => {
+      document.getElementById("searchRow").classList.toggle("active");
+    };
+
+    document.getElementById("saveBtn").onclick = () => {
+      const val = document.getElementById("cityInput").value.trim();
+      if (val) {
+        city = val;
+        localStorage.setItem("salah_city", city);
+        document.getElementById("searchRow").classList.remove("active");
+        loadPrayerTimes();
       }
-    });
+    };
 
-    readWidgetLocalStorage();
-    forceSilentRefresh();
-
-    // Check active prayer status every minute
-    setInterval(evaluateActivePrayerHighlight, 60000);
+    // Init
+    drawDialNumbers();
+    loadPrayerTimes();
+    startClock();
   </script>
 </body>
 </html>
